@@ -40,63 +40,29 @@
 #define STEP_DELAY_MS                    50
 
 /* at-start led resouce array */
-gpio_type *led_gpio_port[LED_NUM]        = {LED2_GPIO, LED3_GPIO, LED4_GPIO};
-uint16_t led_gpio_pin[LED_NUM]           = {LED2_PIN, LED3_PIN, LED4_PIN};
-crm_periph_clock_type led_gpio_crm_clk[LED_NUM] = {LED2_GPIO_CRM_CLK, LED3_GPIO_CRM_CLK, LED4_GPIO_CRM_CLK};
+gpio_type *led_gpio_port[LED_NUM]        = {LED_POW_GPIO, LED_ERR_GPIO};
+uint16_t led_gpio_pin[LED_NUM]           = {LED_POW_PIN, LED_ERR_PIN};
+crm_periph_clock_type led_gpio_crm_clk[LED_NUM] = {LED_POW_GPIO_CRM_CLK, LED_ERR_GPIO_CRM_CLK};
 
 /* delay variable */
 static __IO uint32_t fac_us;
 static __IO uint32_t fac_ms;
 
-/* support printf function, usemicrolib is unnecessary */
-#if (__ARMCC_VERSION > 6000000)
-  __asm (".global __use_no_semihosting\n\t");
-  void _sys_exit(int x)
-  {
-    x = x;
-  }
-  /* __use_no_semihosting was requested, but _ttywrch was */
-  void _ttywrch(int ch)
-  {
-    ch = ch;
-  }
-  FILE __stdout;
-#else
- #ifdef __CC_ARM
-  #pragma import(__use_no_semihosting)
-  struct __FILE
-  {
-    int handle;
-  };
-  FILE __stdout;
-  void _sys_exit(int x)
-  {
-    x = x;
-  }
-  /* __use_no_semihosting was requested, but _ttywrch was */
-  void _ttywrch(int ch)
-  {
-    ch = ch;
-  }
- #endif
-#endif
 
-#if defined (__GNUC__) && !defined (__clang__)
-  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif
-
-/**
-  * @brief  retargets the c library printf function to the usart.
-  * @param  none
-  * @retval none
-  */
-PUTCHAR_PROTOTYPE
+void rs485_1_send_data(uint8_t* buf, uint8_t cnt)
 {
-  while(usart_flag_get(PRINT_UART, USART_TDBE_FLAG) == RESET);
-  usart_data_transmit(PRINT_UART, ch);
-  return ch;
+  while(cnt--){
+    while(usart_flag_get(USART1, USART_TDBE_FLAG) == RESET);
+    usart_data_transmit(USART1, *buf++);
+  }
+}
+
+void rs485_2_send_data(uint8_t* buf, uint8_t cnt)
+{
+  while(cnt--){
+    while(usart_flag_get(USART2, USART_TDBE_FLAG) == RESET);
+    usart_data_transmit(USART2, *buf++);
+  }
 }
 
 /**
@@ -104,30 +70,73 @@ PUTCHAR_PROTOTYPE
   * @param  baudrate: uart baudrate
   * @retval none
   */
-void uart_print_init(uint32_t baudrate)
+void uart1_init(uint32_t baudrate)
 {
-  gpio_init_type gpio_init_struct;
+	gpio_init_type gpio_init_struct;
 
-  /* enable the uart and gpio clock */
-  crm_periph_clock_enable(PRINT_UART_CRM_CLK, TRUE);
-  crm_periph_clock_enable(PRINT_UART_TX_GPIO_CRM_CLK, TRUE);
+	/* enable the uart and gpio clock */
+	crm_periph_clock_enable(PRINT1_UART_CRM_CLK, TRUE);
+	crm_periph_clock_enable(PRINT1_UART_TX_GPIO_CRM_CLK, TRUE);
+	crm_periph_clock_enable(PRINT1_UART_DE_GPIO_CRM_CLK, TRUE);
 
-  gpio_default_para_init(&gpio_init_struct);
+	gpio_default_para_init(&gpio_init_struct);
 
-  /* configure the uart tx pin */
-  gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
-  gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
-  gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
-  gpio_init_struct.gpio_pins = PRINT_UART_TX_PIN;
-  gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
-  gpio_init(PRINT_UART_TX_GPIO, &gpio_init_struct);
+	/* configure the uart tx pin */
+	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
+	gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
+	gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
+	gpio_init_struct.gpio_pins = PRINT1_UART_TX_PIN;
+	gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
+	gpio_init(PRINT1_UART_TX_GPIO, &gpio_init_struct);
 
-  gpio_pin_mux_config(PRINT_UART_TX_GPIO, PRINT_UART_TX_PIN_SOURCE, PRINT_UART_TX_PIN_MUX_NUM); 
+	gpio_pin_mux_config(PRINT1_UART_TX_GPIO, PRINT1_UART_TX_PIN_SOURCE, PRINT1_UART_TX_PIN_MUX_NUM);
 
-  /* configure uart param */
-  usart_init(PRINT_UART, baudrate, USART_DATA_8BITS, USART_STOP_1_BIT);
-  usart_transmitter_enable(PRINT_UART, TRUE);
-  usart_enable(PRINT_UART, TRUE);
+	gpio_init_struct.gpio_pins = PRINT1_UART_DE_PIN;
+	gpio_init(PRINT1_UART_DE_GPIO, &gpio_init_struct);
+
+	gpio_pin_mux_config(PRINT1_UART_DE_GPIO, PRINT1_UART_DE_PIN_SOURCE, PRINT1_UART_DE_PIN_MUX_NUM);
+
+	/* configure uart param */
+	usart_init(USART1, baudrate, USART_DATA_8BITS, USART_STOP_1_BIT);
+	usart_rs485_delay_time_config(USART1, 2, 2);
+	usart_de_polarity_set(USART1, USART_DE_POLARITY_HIGH);
+	usart_rs485_mode_enable(USART1, TRUE);
+	usart_transmitter_enable(USART1, TRUE);
+	usart_enable(USART1, TRUE);
+}
+
+void uart2_init(uint32_t baudrate)
+{
+	gpio_init_type gpio_init_struct;
+
+	crm_periph_clock_enable(PRINT2_UART_CRM_CLK, TRUE);
+	crm_periph_clock_enable(PRINT2_UART_TX_GPIO_CRM_CLK, TRUE);
+	crm_periph_clock_enable(PRINT2_UART_DE_GPIO_CRM_CLK, TRUE);
+
+    gpio_default_para_init(&gpio_init_struct);
+
+    /* configure the uart tx pin */
+    gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
+    gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
+    gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
+    gpio_init_struct.gpio_pins = PRINT2_UART_TX_PIN;
+    gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
+    gpio_init(PRINT2_UART_TX_GPIO, &gpio_init_struct);
+
+    gpio_pin_mux_config(PRINT2_UART_TX_GPIO, PRINT2_UART_TX_PIN_SOURCE, PRINT2_UART_TX_PIN_MUX_NUM);
+
+    gpio_init_struct.gpio_pins = PRINT2_UART_DE_PIN;
+    gpio_init(PRINT2_UART_DE_GPIO, &gpio_init_struct);
+
+    gpio_pin_mux_config(PRINT2_UART_DE_GPIO, PRINT2_UART_DE_PIN_SOURCE, PRINT2_UART_DE_PIN_MUX_NUM);
+
+    /* configure uart param */
+    usart_init(USART2, baudrate, USART_DATA_8BITS, USART_STOP_1_BIT);
+    usart_rs485_delay_time_config(USART2, 2, 2);
+    usart_de_polarity_set(USART2, USART_DE_POLARITY_HIGH);
+    usart_rs485_mode_enable(USART2, TRUE);
+    usart_transmitter_enable(USART2, TRUE);
+    usart_enable(USART2, TRUE);
 }
 
 /**
@@ -141,73 +150,12 @@ void at32_board_init()
   delay_init();
 
   /* configure led in at_start_board */
-  at32_led_init(LED2);
-  at32_led_init(LED3);
-  at32_led_init(LED4);
-  at32_led_off(LED2);
-  at32_led_off(LED3);
-  at32_led_off(LED4);
+  at32_led_init(LED_POW);
+  at32_led_init(LED_ERR);
 
-  /* configure button in at_start board */
-  at32_button_init();
-}
+  at32_led_off(LED_POW);
+  at32_led_off(LED_ERR);
 
-/**
-  * @brief  configure button gpio
-  * @param  button: specifies the button to be configured.
-  * @retval none
-  */
-void at32_button_init(void)
-{
-  gpio_init_type gpio_init_struct;
-
-  /* enable the button clock */
-  crm_periph_clock_enable(USER_BUTTON_CRM_CLK, TRUE);
-
-  /* set default parameter */
-  gpio_default_para_init(&gpio_init_struct);
-
-  /* configure button pin as input with pull-up/pull-down */
-  gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
-  gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
-  gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
-  gpio_init_struct.gpio_pins = USER_BUTTON_PIN;
-  gpio_init_struct.gpio_pull = GPIO_PULL_DOWN;
-  gpio_init(USER_BUTTON_PORT, &gpio_init_struct);
-}
-
-/**
-  * @brief  returns the selected button state   
-  * @param  none
-  * @retval the button gpio pin value
-  */
-uint8_t at32_button_state(void)
-{
-  return gpio_input_data_bit_read(USER_BUTTON_PORT, USER_BUTTON_PIN);
-}
-
-/**
-  * @brief  returns which button have press down 
-  * @param  none
-  * @retval the button have press down
-  */
-button_type at32_button_press()
-{
-  static uint8_t pressed = 1;
-  /* get button state in at_start board */
-  if((pressed == 1) && (at32_button_state() != RESET))
-  {
-    /* debounce */
-    pressed = 0;
-    delay_ms(10);
-    if(at32_button_state() != RESET)
-      return USER_BUTTON;
-  }
-  else if(at32_button_state() == RESET)
-  {
-    pressed = 1;
-  }
-  return NO_BUTTON;
 }
 
 /**

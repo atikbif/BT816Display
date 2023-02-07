@@ -58,16 +58,17 @@ int main(void)
   
   system_clock_config();
   
-  /* init led2*/
-  at32_led_init(LED2);
-  /* init led3*/
-  at32_led_init(LED3);
-  /* init led4*/
-  at32_led_init(LED4);
+  at32_led_init(LED_POW);
+  at32_led_init(LED_ERR);
+
   
   /* init usart1 */
-  uart_print_init(115200);
+  uart1_init(115200);
+  uart2_init(115200);
   
+  rs485_1_send_data("Start\r\n",7);
+  rs485_2_send_data("Start\r\n",7);
+
   /* enter critical */
   taskENTER_CRITICAL(); 
 
@@ -79,11 +80,13 @@ int main(void)
                  (UBaseType_t    )2,
                  (TaskHandle_t*  )&network_handler) != pdPASS)
   {
-    printf("Network task could not be created as there was insufficient heap memory remaining.\r\n");
+	  rs485_1_send_data("Task create error\r\n",19);
+	  rs485_2_send_data("Task create error\r\n",19);
   }        
   else
   {
-    printf("Network task was created successfully.\r\n");
+	  rs485_1_send_data("Task create OK\r\n",16);
+	  rs485_2_send_data("Task create OK\r\n",16);
   }
   
   /* exit critical */            

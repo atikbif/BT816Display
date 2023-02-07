@@ -62,46 +62,47 @@ extern "C" {
 /******************** define led ********************/
 typedef enum
 {
-  LED2                                   = 0,
-  LED3                                   = 1,
-  LED4                                   = 2
+  LED_POW                                   = 0,
+  LED_ERR                                   = 1,
 }led_type;
 
-#define LED_NUM                          3
+#define LED_NUM                          2
 
-#if defined (AT_START_F435_V1) || defined (AT_START_F437_V1)
-#define LED2_PIN                         GPIO_PINS_12
-#define LED2_GPIO                        GPIOD
-#define LED2_GPIO_CRM_CLK                CRM_GPIOD_PERIPH_CLOCK
+#define LED_POW_PIN                     GPIO_PINS_12
+#define LED_POW_GPIO                    GPIOD
+#define LED_POW_GPIO_CRM_CLK            CRM_GPIOD_PERIPH_CLOCK
 
-#define LED3_PIN                         GPIO_PINS_2
-#define LED3_GPIO                        GPIOG
-#define LED3_GPIO_CRM_CLK                CRM_GPIOG_PERIPH_CLOCK
-
-#define LED4_PIN                         GPIO_PINS_2
-#define LED4_GPIO                        GPIOG
-#define LED4_GPIO_CRM_CLK                CRM_GPIOG_PERIPH_CLOCK
-#endif
+#define LED_ERR_PIN                     GPIO_PINS_2
+#define LED_ERR_GPIO                    GPIOG
+#define LED_ERR_GPIO_CRM_CLK            CRM_GPIOG_PERIPH_CLOCK
 
 /**************** define print uart ******************/
-#define PRINT_UART                       USART1
-#define PRINT_UART_CRM_CLK               CRM_USART1_PERIPH_CLOCK
-#define PRINT_UART_TX_PIN                GPIO_PINS_9
-#define PRINT_UART_TX_GPIO               GPIOA
-#define PRINT_UART_TX_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
-#define PRINT_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE9
-#define PRINT_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
 
-/******************* define button *******************/
-typedef enum
-{
-  USER_BUTTON                            = 0,
-  NO_BUTTON                              = 1
-} button_type;
+#define PRINT1_UART_CRM_CLK               CRM_USART1_PERIPH_CLOCK
+#define PRINT1_UART_TX_PIN                GPIO_PINS_9
+#define PRINT1_UART_TX_GPIO               GPIOA
+#define PRINT1_UART_TX_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
+#define PRINT1_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE9
+#define PRINT1_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
 
-#define USER_BUTTON_PIN                  GPIO_PINS_0
-#define USER_BUTTON_PORT                 GPIOA                                 
-#define USER_BUTTON_CRM_CLK              CRM_GPIOA_PERIPH_CLOCK
+#define PRINT1_UART_DE_PIN                GPIO_PINS_12
+#define PRINT1_UART_DE_GPIO               GPIOA
+#define PRINT1_UART_DE_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
+#define PRINT1_UART_DE_PIN_SOURCE         GPIO_PINS_SOURCE12
+#define PRINT1_UART_DE_PIN_MUX_NUM        GPIO_MUX_7
+
+#define PRINT2_UART_CRM_CLK               CRM_USART2_PERIPH_CLOCK
+#define PRINT2_UART_TX_PIN                GPIO_PINS_5
+#define PRINT2_UART_TX_GPIO               GPIOD
+#define PRINT2_UART_TX_GPIO_CRM_CLK       CRM_GPIOD_PERIPH_CLOCK
+#define PRINT2_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE5
+#define PRINT2_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
+
+#define PRINT2_UART_DE_PIN                GPIO_PINS_4
+#define PRINT2_UART_DE_GPIO               GPIOD
+#define PRINT2_UART_DE_GPIO_CRM_CLK       CRM_GPIOD_PERIPH_CLOCK
+#define PRINT2_UART_DE_PIN_SOURCE         GPIO_PINS_SOURCE4
+#define PRINT2_UART_DE_PIN_MUX_NUM        GPIO_MUX_7
 
 /**
   * @}
@@ -120,11 +121,6 @@ void at32_led_on(led_type led);
 void at32_led_off(led_type led);
 void at32_led_toggle(led_type led);
 
-/* button operation function */
-void at32_button_init(void);
-button_type at32_button_press(void);
-uint8_t at32_button_state(void);
-
 /* delay function */
 void delay_init(void);
 void delay_us(uint32_t nus);
@@ -132,7 +128,11 @@ void delay_ms(uint16_t nms);
 void delay_sec(uint16_t sec);
 
 /* printf uart init function */
-void uart_print_init(uint32_t baudrate);
+void uart1_init(uint32_t baudrate);
+void uart2_init(uint32_t baudrate);
+
+void rs485_1_send_data(uint8_t* buf, uint8_t cnt);
+void rs485_2_send_data(uint8_t* buf, uint8_t cnt);
 
 /**
   * @}
