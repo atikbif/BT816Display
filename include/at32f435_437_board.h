@@ -76,33 +76,37 @@ typedef enum
 #define LED_ERR_GPIO                    GPIOG
 #define LED_ERR_GPIO_CRM_CLK            CRM_GPIOG_PERIPH_CLOCK
 
+#define BT_PD_PIN							GPIO_PINS_14
+#define BT_PD_GPIO                        	GPIOD
+#define BT_PD_GPIO_CRM_CLK                	CRM_GPIOD_PERIPH_CLOCK
+
 /**************** define print uart ******************/
 
-#define PRINT1_UART_CRM_CLK               CRM_USART1_PERIPH_CLOCK
-#define PRINT1_UART_TX_PIN                GPIO_PINS_9
-#define PRINT1_UART_TX_GPIO               GPIOA
-#define PRINT1_UART_TX_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
-#define PRINT1_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE9
-#define PRINT1_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
+#define RS485_1_UART_CRM_CLK               CRM_USART1_PERIPH_CLOCK
+#define RS485_1_UART_TX_PIN                GPIO_PINS_9
+#define RS485_1_UART_TX_GPIO               GPIOA
+#define RS485_1_UART_TX_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
+#define RS485_1_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE9
+#define RS485_1_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
 
-#define PRINT1_UART_DE_PIN                GPIO_PINS_12
-#define PRINT1_UART_DE_GPIO               GPIOA
-#define PRINT1_UART_DE_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
-#define PRINT1_UART_DE_PIN_SOURCE         GPIO_PINS_SOURCE12
-#define PRINT1_UART_DE_PIN_MUX_NUM        GPIO_MUX_7
+#define RS485_1_UART_DE_PIN                GPIO_PINS_12
+#define RS485_1_UART_DE_GPIO               GPIOA
+#define RS485_1_UART_DE_GPIO_CRM_CLK       CRM_GPIOA_PERIPH_CLOCK
+#define RS485_1_UART_DE_PIN_SOURCE         GPIO_PINS_SOURCE12
+#define RS485_1_UART_DE_PIN_MUX_NUM        GPIO_MUX_7
 
-#define PRINT2_UART_CRM_CLK               CRM_USART2_PERIPH_CLOCK
-#define PRINT2_UART_TX_PIN                GPIO_PINS_5
-#define PRINT2_UART_TX_GPIO               GPIOD
-#define PRINT2_UART_TX_GPIO_CRM_CLK       CRM_GPIOD_PERIPH_CLOCK
-#define PRINT2_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE5
-#define PRINT2_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
+#define RS485_2_UART_CRM_CLK               CRM_USART2_PERIPH_CLOCK
+#define RS485_2_UART_TX_PIN                GPIO_PINS_5
+#define RS485_2_UART_TX_GPIO               GPIOD
+#define RS485_2_UART_TX_GPIO_CRM_CLK       CRM_GPIOD_PERIPH_CLOCK
+#define RS485_2_UART_TX_PIN_SOURCE         GPIO_PINS_SOURCE5
+#define RS485_2_UART_TX_PIN_MUX_NUM        GPIO_MUX_7
 
-#define PRINT2_UART_DE_PIN                GPIO_PINS_4
-#define PRINT2_UART_DE_GPIO               GPIOD
-#define PRINT2_UART_DE_GPIO_CRM_CLK       CRM_GPIOD_PERIPH_CLOCK
-#define PRINT2_UART_DE_PIN_SOURCE         GPIO_PINS_SOURCE4
-#define PRINT2_UART_DE_PIN_MUX_NUM        GPIO_MUX_7
+#define RS485_2_UART_DE_PIN                GPIO_PINS_4
+#define RS485_2_UART_DE_GPIO               GPIOD
+#define RS485_2_UART_DE_GPIO_CRM_CLK       CRM_GPIOD_PERIPH_CLOCK
+#define RS485_2_UART_DE_PIN_SOURCE         GPIO_PINS_SOURCE4
+#define RS485_2_UART_DE_PIN_MUX_NUM        GPIO_MUX_7
 
 /**
   * @}

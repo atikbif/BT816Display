@@ -30,6 +30,9 @@
 #include "stdio.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "backlight.h"
+#include "bt816_spi.h"
+#include "display_task.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -43,9 +46,10 @@ extern void udpecho_init(void);
 extern void tcpecho_init(void);
 
 TaskHandle_t network_handler;
-
-/* led3 task */
 void network_task_function(void *pvParameters);
+
+TaskHandle_t lcd_handler;
+void lcd_task_function(void *pvParameters);
 
 /**
   * @brief  main function.
@@ -57,6 +61,7 @@ int main(void)
   nvic_priority_group_config(NVIC_PRIORITY_GROUP_4);
   
   system_clock_config();
+  delay_init();
   
   at32_led_init(LED_POW);
   at32_led_init(LED_ERR);
@@ -69,6 +74,9 @@ int main(void)
   rs485_1_send_data("Start\r\n",7);
   rs485_2_send_data("Start\r\n",7);
 
+  init_backlight();
+  bt816_spi_init();
+
   /* enter critical */
   taskENTER_CRITICAL(); 
 
@@ -80,13 +88,27 @@ int main(void)
                  (UBaseType_t    )2,
                  (TaskHandle_t*  )&network_handler) != pdPASS)
   {
-	  rs485_1_send_data("Task create error\r\n",19);
-	  rs485_2_send_data("Task create error\r\n",19);
+	  rs485_1_send_data("Network task create error\r\n",27);
+	  rs485_2_send_data("Network task create error\r\n",27);
   }        
   else
   {
-	  rs485_1_send_data("Task create OK\r\n",16);
-	  rs485_2_send_data("Task create OK\r\n",16);
+	  rs485_1_send_data("Network task create OK\r\n",24);
+	  rs485_2_send_data("Network task create OK\r\n",24);
+  }
+
+  if(xTaskCreate((TaskFunction_t )lcd_task_function,
+				 (const char*    )"LCD_task",
+				 (uint16_t       )(1024*1),
+				 (void*          )NULL,
+				 (UBaseType_t    )2,
+				 (TaskHandle_t*  )&lcd_handler) != pdPASS)
+  {
+	  rs485_1_send_data("LCD task create error\r\n",23);
+	  rs485_2_send_data("LCD task create error\r\n",23);
+  }else {
+	  rs485_1_send_data("LCD task create OK\r\n",20);
+	  rs485_2_send_data("LCD task create OK\r\n",20);
   }
   
   /* exit critical */            
@@ -98,7 +120,6 @@ int main(void)
 }
 
 
-/* led3 task function */
 void network_task_function(void *pvParameters)
 {
 	while(emac_system_init() == ERROR);
@@ -107,15 +128,8 @@ void network_task_function(void *pvParameters)
 	tcpecho_init();
 	while(1)
 	{
-		//at32_led_toggle(LED3);
+		//at32_led_toggle(LED_POW);
 		vTaskDelay(500);
 	}
 }
 
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 

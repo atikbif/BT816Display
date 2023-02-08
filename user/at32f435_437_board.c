@@ -75,9 +75,9 @@ void uart1_init(uint32_t baudrate)
 	gpio_init_type gpio_init_struct;
 
 	/* enable the uart and gpio clock */
-	crm_periph_clock_enable(PRINT1_UART_CRM_CLK, TRUE);
-	crm_periph_clock_enable(PRINT1_UART_TX_GPIO_CRM_CLK, TRUE);
-	crm_periph_clock_enable(PRINT1_UART_DE_GPIO_CRM_CLK, TRUE);
+	crm_periph_clock_enable(RS485_1_UART_CRM_CLK, TRUE);
+	crm_periph_clock_enable(RS485_1_UART_TX_GPIO_CRM_CLK, TRUE);
+	crm_periph_clock_enable(RS485_1_UART_DE_GPIO_CRM_CLK, TRUE);
 
 	gpio_default_para_init(&gpio_init_struct);
 
@@ -85,16 +85,16 @@ void uart1_init(uint32_t baudrate)
 	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
 	gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
 	gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
-	gpio_init_struct.gpio_pins = PRINT1_UART_TX_PIN;
+	gpio_init_struct.gpio_pins = RS485_1_UART_TX_PIN;
 	gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
-	gpio_init(PRINT1_UART_TX_GPIO, &gpio_init_struct);
+	gpio_init(RS485_1_UART_TX_GPIO, &gpio_init_struct);
 
-	gpio_pin_mux_config(PRINT1_UART_TX_GPIO, PRINT1_UART_TX_PIN_SOURCE, PRINT1_UART_TX_PIN_MUX_NUM);
+	gpio_pin_mux_config(RS485_1_UART_TX_GPIO, RS485_1_UART_TX_PIN_SOURCE, RS485_1_UART_TX_PIN_MUX_NUM);
 
-	gpio_init_struct.gpio_pins = PRINT1_UART_DE_PIN;
-	gpio_init(PRINT1_UART_DE_GPIO, &gpio_init_struct);
+	gpio_init_struct.gpio_pins = RS485_1_UART_DE_PIN;
+	gpio_init(RS485_1_UART_DE_GPIO, &gpio_init_struct);
 
-	gpio_pin_mux_config(PRINT1_UART_DE_GPIO, PRINT1_UART_DE_PIN_SOURCE, PRINT1_UART_DE_PIN_MUX_NUM);
+	gpio_pin_mux_config(RS485_1_UART_DE_GPIO, RS485_1_UART_DE_PIN_SOURCE, RS485_1_UART_DE_PIN_MUX_NUM);
 
 	/* configure uart param */
 	usart_init(USART1, baudrate, USART_DATA_8BITS, USART_STOP_1_BIT);
@@ -109,9 +109,9 @@ void uart2_init(uint32_t baudrate)
 {
 	gpio_init_type gpio_init_struct;
 
-	crm_periph_clock_enable(PRINT2_UART_CRM_CLK, TRUE);
-	crm_periph_clock_enable(PRINT2_UART_TX_GPIO_CRM_CLK, TRUE);
-	crm_periph_clock_enable(PRINT2_UART_DE_GPIO_CRM_CLK, TRUE);
+	crm_periph_clock_enable(RS485_2_UART_CRM_CLK, TRUE);
+	crm_periph_clock_enable(RS485_2_UART_TX_GPIO_CRM_CLK, TRUE);
+	crm_periph_clock_enable(RS485_2_UART_DE_GPIO_CRM_CLK, TRUE);
 
     gpio_default_para_init(&gpio_init_struct);
 
@@ -119,16 +119,16 @@ void uart2_init(uint32_t baudrate)
     gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
     gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
     gpio_init_struct.gpio_mode = GPIO_MODE_MUX;
-    gpio_init_struct.gpio_pins = PRINT2_UART_TX_PIN;
+    gpio_init_struct.gpio_pins = RS485_2_UART_TX_PIN;
     gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
-    gpio_init(PRINT2_UART_TX_GPIO, &gpio_init_struct);
+    gpio_init(RS485_2_UART_TX_GPIO, &gpio_init_struct);
 
-    gpio_pin_mux_config(PRINT2_UART_TX_GPIO, PRINT2_UART_TX_PIN_SOURCE, PRINT2_UART_TX_PIN_MUX_NUM);
+    gpio_pin_mux_config(RS485_2_UART_TX_GPIO, RS485_2_UART_TX_PIN_SOURCE, RS485_2_UART_TX_PIN_MUX_NUM);
 
-    gpio_init_struct.gpio_pins = PRINT2_UART_DE_PIN;
-    gpio_init(PRINT2_UART_DE_GPIO, &gpio_init_struct);
+    gpio_init_struct.gpio_pins = RS485_2_UART_DE_PIN;
+    gpio_init(RS485_2_UART_DE_GPIO, &gpio_init_struct);
 
-    gpio_pin_mux_config(PRINT2_UART_DE_GPIO, PRINT2_UART_DE_PIN_SOURCE, PRINT2_UART_DE_PIN_MUX_NUM);
+    gpio_pin_mux_config(RS485_2_UART_DE_GPIO, RS485_2_UART_DE_PIN_SOURCE, RS485_2_UART_DE_PIN_MUX_NUM);
 
     /* configure uart param */
     usart_init(USART2, baudrate, USART_DATA_8BITS, USART_STOP_1_BIT);
