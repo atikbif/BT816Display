@@ -146,15 +146,21 @@ void uart2_init(uint32_t baudrate)
   */
 void at32_board_init()
 {
-  /* initialize delay function */
-  delay_init();
+  crm_periph_clock_enable(BT_PD_GPIO_CRM_CLK, TRUE);
 
-  /* configure led in at_start_board */
-  at32_led_init(LED_POW);
-  at32_led_init(LED_ERR);
+  	/* set default parameter */
+  	gpio_init_type gpio_init_struct;
+  	gpio_default_para_init(&gpio_init_struct);
 
-  at32_led_off(LED_POW);
-  at32_led_off(LED_ERR);
+  	/* configure the led gpio */
+  	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
+  	gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
+  	gpio_init_struct.gpio_mode = GPIO_MODE_OUTPUT;
+  	gpio_init_struct.gpio_pins = BT_PD_PIN;
+  	gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
+  	gpio_init(BT_PD_GPIO, &gpio_init_struct);
+
+  	gpio_bits_reset(BT_PD_GPIO, BT_PD_PIN);
 
 }
 

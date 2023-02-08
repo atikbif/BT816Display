@@ -11,16 +11,17 @@
 #include "task.h"
 #include "backlight.h"
 #include "bt816_cmd.h"
+#include "keyboard.h"
 
 void lcd_task_function(void *pvParameters)
 {
-	vTaskDelay(200);
 	bt816_init();
-	init_display2();
+	//init_display2();
 	while(1)
 	{
-		demo_display2();
+		//demo_display2();
 		//at32_led_toggle(LED_POW);
+		display_value(get_pressed_keys());
 		vTaskDelay(100);
 	}
 }

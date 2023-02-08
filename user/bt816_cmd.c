@@ -1636,7 +1636,7 @@ uint8_t bt816_init() {
 	if(dev_id==BT816_ID) {
 		bt816_mem_write32(REG_CMDB_WRITE,CMD_FLASHATTACH);
 		uint8_t flash_status = bt816_mem_read8(0x3025F0);
-		if(flash_status==2)	{
+		if((flash_status==2) || (flash_status==3))	{
 
 #if WR_BLOB
 			bt816_cmd_memwrite(0,4096,(uint8_t*)unified_blob);
@@ -1673,6 +1673,7 @@ uint8_t bt816_init() {
 			bt816_mem_write32(RAM_DL, bt816_clear_color_rgb(0,0,0));
 			bt816_mem_write32(RAM_DL + 4, bt816_clear(1,1,1));
 			bt816_mem_write32(REG_DLSWAP, DLSWAP_FRAME);
+			//demo_display1();
 
 			//uint32_t frequency = EVE_cmd_pclkfreq(EVE_PCLK_FREQ, 0);
 
@@ -1681,6 +1682,14 @@ uint8_t bt816_init() {
 
 			bt816_mem_write8(REG_GPIO, 0x80);
 			bt816_mem_write8(REG_PCLK, 2);
+
+//			v = bt816_mem_read32(REG_FRAMES);
+//			delay_ms(100);
+//			v = bt816_mem_read32(REG_FRAMES);
+//			if(v==0) return 0;
+//			delay_ms(100);
+//			v = bt816_mem_read32(REG_FRAMES);
+//			if(v==0) return 0;
 
 			return 1;
 		}

@@ -616,3 +616,17 @@ void demo_display2(void) {
 	bt816_cmd_dl(DL_DISPLAY); /* instruct the co-processor to show the list */
 	bt816_cmd_dl(CMD_SWAP); /* make this list active */
 }
+
+void display_value(uint16_t value) {
+	bt816_cmd_dl(CMD_DLSTART);
+	bt816_cmd_dl(DL_CLEAR_COLOR_RGB | BLACK);
+	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
+
+	bt816_cmd_dl(DL_COLOR_RGB | WHITE);
+	bt816_cmd_dl(DL_END);
+
+	bt816_cmd_number(100, 100, 31, BT816_OPT_CENTERX, value);
+
+	bt816_cmd_dl(DL_DISPLAY);
+	bt816_cmd_dl(CMD_SWAP);
+}

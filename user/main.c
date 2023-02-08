@@ -33,6 +33,7 @@
 #include "backlight.h"
 #include "bt816_spi.h"
 #include "display_task.h"
+#include "keyboard.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -46,10 +47,10 @@ extern void udpecho_init(void);
 extern void tcpecho_init(void);
 
 TaskHandle_t network_handler;
-void network_task_function(void *pvParameters);
-
 TaskHandle_t lcd_handler;
-void lcd_task_function(void *pvParameters);
+TaskHandle_t key_handler;
+
+void network_task_function(void *pvParameters);
 
 /**
   * @brief  main function.
@@ -61,7 +62,7 @@ int main(void)
   nvic_priority_group_config(NVIC_PRIORITY_GROUP_4);
   
   system_clock_config();
-  delay_init();
+  at32_board_init();
   
   at32_led_init(LED_POW);
   at32_led_init(LED_ERR);
@@ -111,6 +112,20 @@ int main(void)
 	  rs485_2_send_data("LCD task create OK\r\n",20);
   }
   
+  if(xTaskCreate((TaskFunction_t )keyboard_task_function,
+  				 (const char*    )"KEY_task",
+  				 (uint16_t       )(configMINIMAL_STACK_SIZE),
+  				 (void*          )NULL,
+  				 (UBaseType_t    )2,
+  				 (TaskHandle_t*  )&key_handler) != pdPASS)
+  {
+  	  rs485_1_send_data("KEY task create error\r\n",23);
+  	  rs485_2_send_data("KEY task create error\r\n",23);
+  }else {
+  	  rs485_1_send_data("KEY task create OK\r\n",20);
+  	  rs485_2_send_data("KEY task create OK\r\n",20);
+  }
+
   /* exit critical */            
   taskEXIT_CRITICAL();      
               
