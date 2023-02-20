@@ -152,7 +152,6 @@ void at32_board_init()
   	gpio_init_type gpio_init_struct;
   	gpio_default_para_init(&gpio_init_struct);
 
-  	/* configure the led gpio */
   	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
   	gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
   	gpio_init_struct.gpio_mode = GPIO_MODE_OUTPUT;

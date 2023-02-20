@@ -10,10 +10,10 @@
 #include "bt816_spi.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "demo_display.h"
 
 #define WR_BLOB	0
 
-#if WR_BLOB
 static const uint8_t unified_blob [4096] = {
 	112, 223, 251, 146, 30, 1, 0, 0, 232, 166, 48, 0, 24, 1, 16, 0, 0, 0, 248, 218, 74, 167, 42, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 64, 128, 141, 114, 98, 114, 91, 54, 104, 64, 148, 50, 241, 51, 251, 51, 135, 51, 56, 54, 126, 63, 128, 114, 36, 144, 0, 219, 112, 192, 0, 204, 128, 128, 39, 64, 160, 255, 36, 144, 0, 219, 112, 192, 0, 204,
 	0, 128, 17, 192, 20, 128, 3, 209, 145, 118, 64, 128, 3, 194, 17, 199, 150, 255, 16, 64, 162, 63, 199, 128, 135, 114, 81, 116, 130, 50, 104, 64, 81, 52, 137, 63, 251, 51, 135, 51, 129, 54, 117, 54, 26, 0, 0, 0, 49, 70, 24, 35, 132, 58, 227, 107, 43, 157, 255, 255, 255, 255, 255, 255, 70, 114, 197, 49, 104, 64, 148, 50, 241, 51, 251, 51, 135, 51, 11, 0,
@@ -68,7 +68,6 @@ static const uint8_t unified_blob [4096] = {
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 3, 0, 88, 1, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 119, 118, 84, 50, 16, 254, 220, 186, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
 	90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90
 };
-#endif
 
 void bt816_power_down_on() {
 	gpio_bits_reset(BT_PD_GPIO, BT_PD_PIN);
@@ -1635,63 +1634,74 @@ uint8_t bt816_init() {
 	vTaskDelay(200);
 	if(dev_id==BT816_ID) {
 		bt816_mem_write32(REG_CMDB_WRITE,CMD_FLASHATTACH);
+		vTaskDelay(200);
 		uint8_t flash_status = bt816_mem_read8(0x3025F0);
-		if((flash_status==2) || (flash_status==3))	{
+		if(flash_status==2)	{
 
-#if WR_BLOB
-			bt816_cmd_memwrite(0,4096,(uint8_t*)unified_blob);
+			bt816_cmd_flashread(0, 0, 4096);
 			vTaskDelay(100);
+			uint8_t blob_check = 1;
+			for(uint16_t i=0;i<4096;i++) {
+				uint8_t val = bt816_mem_read8(i);
+				if(val!=unified_blob[i]) {
+					blob_check = 0;
+					break;
+				}
+			}
+			if(blob_check==0) {
+				bt816_cmd_memwrite(0,4096,(uint8_t*)unified_blob);
+				vTaskDelay(100);
+				bt816_cmd_flashupdate(0,0,4096);
+				vTaskDelay(1000);
+			}else {
 
-			bt816_cmd_flashupdate(0,0,4096);
-			vTaskDelay(1000);
-
-
-//			bt816_cmd_flashread(0, 0, 4096);
-//			vTaskDelay(100);
-//			uint8_t val = bt816_mem_read8(0);
-//			val = bt816_mem_read8(4095);
-#endif
-
+			}
 
 			uint32_t fast_state = bt816_cmd_flashfast();
+			vTaskDelay(100);
 			flash_status = bt816_mem_read8(0x3025F0);
+			if(flash_status==3) {
 
-			bt816_mem_write32(REG_HCYCLE, 862);
-			bt816_mem_write32(REG_HOFFSET, 60);
-			bt816_mem_write32(REG_HSYNC0, 16);
-			bt816_mem_write32(REG_HSYNC1, 36);
-			bt816_mem_write32(REG_VCYCLE, 510);
-			bt816_mem_write32(REG_VOFFSET, 25);
-			bt816_mem_write32(REG_VSYNC0, 7);
-			bt816_mem_write32(REG_VSYNC1, 8);
-			bt816_mem_write32(REG_SWIZZLE, 0);
-			bt816_mem_write32(REG_PCLK_POL, 1);
-			bt816_mem_write32(REG_CSPREAD, 0);
-			bt816_mem_write32(REG_HSIZE, 800);
-			bt816_mem_write32(REG_VSIZE, 480);
+				bt816_mem_write32(REG_HCYCLE, 862);
+				bt816_mem_write32(REG_HOFFSET, 60);
+				bt816_mem_write32(REG_HSYNC0, 16);
+				bt816_mem_write32(REG_HSYNC1, 36);
+				bt816_mem_write32(REG_VCYCLE, 510);
+				bt816_mem_write32(REG_VOFFSET, 25);
+				bt816_mem_write32(REG_VSYNC0, 7);
+				bt816_mem_write32(REG_VSYNC1, 8);
+				bt816_mem_write32(REG_SWIZZLE, 0);
+				bt816_mem_write32(REG_PCLK_POL, 1);
+				bt816_mem_write32(REG_CSPREAD, 0);
+				bt816_mem_write32(REG_HSIZE, 800);
+				bt816_mem_write32(REG_VSIZE, 480);
 
-			bt816_mem_write32(RAM_DL, bt816_clear_color_rgb(0,0,0));
-			bt816_mem_write32(RAM_DL + 4, bt816_clear(1,1,1));
-			bt816_mem_write32(REG_DLSWAP, DLSWAP_FRAME);
-			//demo_display1();
+				uint16_t offset = 0;
+				bt816_mem_write32(RAM_DL+offset, bt816_clear_color_rgb(0,0,0));offset+=4;
+				bt816_mem_write32(RAM_DL+offset, bt816_clear(1,1,1));offset+=4;
+				bt816_mem_write32(RAM_DL+offset, bt816_display());offset+=4;
+				bt816_mem_write32(REG_DLSWAP, DLSWAP_FRAME);
 
-			//uint32_t frequency = EVE_cmd_pclkfreq(EVE_PCLK_FREQ, 0);
+				//demo_display1();
 
-			bt816_mem_write16(REG_GPIOX_DIR, 0xffff);
-			bt816_mem_write16(REG_GPIOX, 0xffff);
+				//uint32_t frequency = EVE_cmd_pclkfreq(EVE_PCLK_FREQ, 0);
 
-			bt816_mem_write8(REG_GPIO, 0x80);
-			bt816_mem_write8(REG_PCLK, 2);
+				bt816_mem_write16(REG_GPIOX_DIR, 0xffff);
+				bt816_mem_write16(REG_GPIOX, 0xffff);
 
-//			v = bt816_mem_read32(REG_FRAMES);
-//			delay_ms(100);
-//			v = bt816_mem_read32(REG_FRAMES);
-//			if(v==0) return 0;
-//			delay_ms(100);
-//			v = bt816_mem_read32(REG_FRAMES);
-//			if(v==0) return 0;
+				bt816_mem_write8(REG_GPIO, 0x80);
+				bt816_mem_write8(REG_PCLK, 2);
 
-			return 1;
+	//			v = bt816_mem_read32(REG_FRAMES);
+	//			vTaskDelay(100);
+	//			v = bt816_mem_read32(REG_FRAMES);
+	//			if(v==0) return 0;
+	//			vTaskDelay(100);
+	//			v = bt816_mem_read32(REG_FRAMES);
+	//			if(v==0) return 0;
+
+				return 1;
+			}
 		}
 	}
 	return 0;
