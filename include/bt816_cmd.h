@@ -257,6 +257,7 @@
 #define CMD_APPENDF          0xFFFFFF59UL
 #define CMD_ANIMFRAME        0xFFFFFF5AUL
 #define CMD_VIDEOSTARTF      0xFFFFFF5FUL
+#define CMD_FONTCACHE		 0xFFFFFF6BUL
 
 /* Registers */
 #define REG_ANA_COMP         0x00302184UL /* only listed in datasheet */
@@ -601,6 +602,7 @@ void bt816_cmd_text(int16_t xc0, int16_t yc0, int16_t font, uint16_t options,
 void bt816_cmd_toggle(int16_t xc0, int16_t yc0, int16_t width, int16_t font,
                     uint16_t options, uint16_t state, const char *p_text);
 void bt816_cmd_translate(int32_t tr_x, int32_t tr_y);
+void bt816_cmd_fontcache(uint32_t font, uint32_t ram_addr, uint32_t cnt);
 
 uint8_t bt816_init();
 

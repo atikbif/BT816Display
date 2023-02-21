@@ -915,6 +915,7 @@ static void private_string_write(const char *p_text) {
 		textindex++;
 	}
 
+
 	/* transmit at least one 0x00 byte */
 	/* and up to four if the string happens to be 4-byte aligned already */
 	padding = textindex & 3U; /* 0, 1, 2 or 3 */
@@ -1705,5 +1706,14 @@ uint8_t bt816_init() {
 		}
 	}
 	return 0;
+}
+
+void bt816_cmd_fontcache(uint32_t font, uint32_t ram_addr, uint32_t cnt) {
+	bt816_cs_set();
+	bt816_begin_cmd(CMD_FONTCACHE);
+	bt816_spi_transmit_32(font);
+	bt816_spi_transmit_32(ram_addr);
+	bt816_spi_transmit_32(cnt);
+	bt816_cs_clear();
 }
 

@@ -17,11 +17,13 @@ void lcd_task_function(void *pvParameters)
 {
 	bt816_init();
 	//init_display2();
+	init_display_fonts();
 	while(1)
 	{
 		//demo_display2();
 		//at32_led_toggle(LED_POW);
-		display_value(get_pressed_keys());
+		//display_value(get_pressed_keys());
+		demo_display_fonts();
 		vTaskDelay(100);
 	}
 }
