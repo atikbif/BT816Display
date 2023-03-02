@@ -34,6 +34,7 @@
 #include "bt816_spi.h"
 #include "display_task.h"
 #include "keyboard.h"
+#include "plc_data.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -77,6 +78,9 @@ int main(void)
 
   init_backlight();
   bt816_spi_init();
+
+  init_plc_data();
+  read_calculation_config(0);
 
   /* enter critical */
   taskENTER_CRITICAL(); 
@@ -137,14 +141,19 @@ int main(void)
 
 void network_task_function(void *pvParameters)
 {
+	uint8_t cnt = 0;
 	while(emac_system_init() == ERROR);
 	tcpip_stack_init();
 	udpecho_init();
 	tcpecho_init();
 	while(1)
 	{
+		cnt++;
+		if(cnt%10==0) imitate_plc_data();
+		plc_data_calculate();
 		//at32_led_toggle(LED_POW);
-		vTaskDelay(500);
+		vTaskDelay(100);
+
 	}
 }
 
