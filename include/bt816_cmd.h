@@ -108,6 +108,8 @@
 #define OPT_FORMAT 4096U
 #define OPT_FILL   8192U
 
+#define OPT_SIGNED	256
+
 #define RAM_ERR_REPORT				0x309800
 
 /* Widget command options */

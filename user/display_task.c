@@ -19,8 +19,8 @@ void lcd_task_function(void *pvParameters)
 	bt816_init();
 	//init_display2();
 	//init_display_fonts();
-	mnemo_read_cnt_from_config(0);
 	init_mnemo();
+	read_mnemo_data(1);
 	while(1)
 	{
 		//demo_display1();
@@ -28,7 +28,7 @@ void lcd_task_function(void *pvParameters)
 		//at32_led_toggle(LED_POW);
 		//display_value(get_pressed_keys());
 		//demo_display_fonts();
-		draw_mnemo(0,0);
+		draw_mnemo();
 		vTaskDelay(100);
 	}
 }

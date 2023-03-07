@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 void init_mnemo();
-uint16_t mnemo_read_cnt_from_config(uint32_t conf_addr);
-void draw_mnemo(uint32_t conf_addr, uint16_t mnemo_num);
+void draw_mnemo();
+uint8_t read_mnemo_data(uint16_t mnemo_num);
 
 #endif /* INCLUDE_MNEMO_H_ */

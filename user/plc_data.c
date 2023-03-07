@@ -7,15 +7,6 @@
 
 #include "plc_data.h"
 
-enum DI_STATE {DI_ON, DI_OFF, DI_FAULT};
-enum DO_STATE {DO_ON, DO_OFF, DO_FAULT};
-enum AI_STATE {AI_NORMAL, AI_FAULT};
-enum AI_TYPE {AI_UNUSED, AI_U, AI_I};
-enum DI_TYPE {DI_UNUSED, DI_USED};
-
-enum PRECISION_TYPE {PR0, PR1, PR2, PR3};
-enum CALC_LINK {LINK_RAW, LINK_2RAW, LINK_CLUST_REGS, LINK_2CLUST_REGS, LINK_NET_REGS, LINK_2NET_REGS};
-
 enum DI_STATE plc_di_state[DI_CNT];
 enum DO_STATE plc_do_state[DO_CNT];
 enum DI_TYPE plc_di_type[DI_CNT];
@@ -23,20 +14,13 @@ enum AI_TYPE plc_ai_type[AI_CNT];
 
 uint16_t plc_ain_raw[AI_CNT];
 uint8_t plc_clust_bits[CLUST_BITS_CNT];
-uint8_t plc_clust_regs[CLUSTER_REGS_CNT];
+uint16_t plc_clust_regs[CLUSTER_REGS_CNT];
 uint8_t plc_net_bits[NET_BITS_CNT];
-uint8_t plc_net_regs[NET_REGS_CNT];
+uint16_t plc_net_regs[NET_REGS_CNT];
 
 uint16_t calc_total_cnt = 0;
 
-struct calc_config {
-	enum PRECISION_TYPE prec;
-	float k;
-	float b;
-	enum CALC_LINK link;
-	uint16_t index;
-	int32_t result;
-}calc[MAX_CALC_CNT];
+calc_config calc[MAX_CALC_CNT];
 
 void init_plc_data() {
 	for(uint16_t i=0;i<DI_CNT;i++) {
@@ -144,8 +128,8 @@ void plc_data_calculate() {
 
 void imitate_plc_data() {
 	static uint8_t cnt = 0;
-	const uint16_t discr[16] = {0x00, 0x01, 0x01, 0x03, 0x00, 0x02, 0xFF, 0xFF,
-								0x07, 0x07, 0x07, 0x00, 0x00, 0x01, 0x01, 0x01};
+	const uint16_t discr[16] = {0x0300, 0x0201, 0x1001, 0x1003, 0x1000, 0x3002, 0x20FF, 0x00FF,
+								0x0107, 0x0207, 0x0407, 0x0800, 0x1000, 0x2001, 0x3001, 0x0001};
 	const uint16_t analogue[4][16] = {
 			{10118, 10125, 10127, 10127, 10250, 11000, 11400, 12000, 11400, 11000, 10300, 10150, 10100, 10105, 10115, 10120},
 			{11118, 11125, 11127, 11127, 11250, 12000, 12400, 13000, 12400, 12000, 11300, 11150, 11100, 11105, 11115, 11120},
@@ -162,6 +146,13 @@ void imitate_plc_data() {
 	if(discr[cnt]&0x40) plc_di_state[6] = DI_FAULT; else plc_di_state[6] = DI_OFF;
 	if(discr[cnt]&0x80) plc_di_state[7] = DI_FAULT; else plc_di_state[7] = DI_OFF;
 
+	if(discr[cnt]&0x0100) plc_do_state[0] = DO_ON; else plc_do_state[0] = DO_OFF;
+	if(discr[cnt]&0x0200) plc_do_state[1] = DO_ON; else plc_do_state[1] = DO_OFF;
+	if(discr[cnt]&0x0400) plc_do_state[2] = DO_ON; else plc_do_state[2] = DO_OFF;
+	if(discr[cnt]&0x0800) plc_do_state[3] = DO_ON; else plc_do_state[3] = DO_OFF;
+	if(discr[cnt]&0x1000) plc_do_state[4] = DO_FAULT; else plc_do_state[4] = DO_OFF;
+	if(discr[cnt]&0x2000) plc_do_state[5] = DO_ON; else plc_do_state[5] = DO_OFF;
+
 	plc_ain_raw[0] = analogue[0][cnt];
 	plc_ain_raw[1] = analogue[1][cnt];
 	plc_ain_raw[2] = analogue[2][cnt];
@@ -170,6 +161,12 @@ void imitate_plc_data() {
 	plc_ain_raw[5] = analogue[1][cnt]+analogue[2][cnt];
 	plc_ain_raw[6] = analogue[2][cnt]+analogue[3][cnt];
 	plc_ain_raw[4] = analogue[3][cnt]+analogue[4][cnt];
+
+	plc_clust_regs[0]+=7;if(plc_clust_regs[0]>=1100) plc_clust_regs[0] = 0;
+	plc_clust_regs[1]+=37;if(plc_clust_regs[1]>=1000) plc_clust_regs[1] = 0;
+	plc_clust_regs[2]+=23;if(plc_clust_regs[2]>=1000) plc_clust_regs[2] = 0;
+	plc_clust_regs[3]+=71;if(plc_clust_regs[3]>=1100) plc_clust_regs[3] = 0;
+	plc_clust_regs[4]+=12;if(plc_clust_regs[4]>=1100) plc_clust_regs[4] = 0;
 
 	cnt++;
 	if(cnt>=16) cnt = 0;
