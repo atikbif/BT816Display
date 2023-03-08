@@ -16,5 +16,6 @@ const uint8_t* get_xfont_data(enum CYR_FONT font);
 uint32_t get_xfont_size(enum CYR_FONT font);
 const uint8_t* get_glyph_data(enum CYR_FONT font);
 uint32_t get_glyph_size(enum CYR_FONT font);
+void init_display_fonts(void);
 
 #endif /* INCLUDE_FONTS_H_ */

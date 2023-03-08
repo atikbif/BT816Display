@@ -7,6 +7,7 @@
 
 #include "fonts.h"
 #include "ram_map.h"
+#include "bt816_cmd.h"
 
 const uint8_t l1_xfont14 [474] = {
 	255, 170, 0, 1, 218, 1, 0, 0, 1, 0, 0, 0, 77, 2, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 10, 0, 0, 0, 15, 0, 0, 0, MEM_L1GLYPH14&0xFF, (MEM_L1GLYPH14>>8)&0xFF, (MEM_L1GLYPH14>>16)&0xFF, 0, 0, 5, 0, 0, 124, 252, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 11, 0, 0, 32, 254, 255, 255,
@@ -974,4 +975,16 @@ uint32_t get_glyph_size(enum CYR_FONT font) {
 			break;
 	}
 	return res;
+}
+
+void init_display_fonts(void) {
+
+	bt816_cmd_memwrite(MEM_L1GLYPH14, get_glyph_size(CYR_FONT14), get_glyph_data(CYR_FONT14));
+	bt816_cmd_memwrite(MEM_L1FONT14, get_xfont_size(CYR_FONT14), get_xfont_data(CYR_FONT14));
+	bt816_cmd_memwrite(MEM_L1GLYPH22, get_glyph_size(CYR_FONT22), get_glyph_data(CYR_FONT22));
+	bt816_cmd_memwrite(MEM_L1FONT22, get_xfont_size(CYR_FONT22), get_xfont_data(CYR_FONT22));
+	bt816_cmd_memwrite(MEM_L1GLYPH30, get_glyph_size(CYR_FONT30), get_glyph_data(CYR_FONT30));
+	bt816_cmd_memwrite(MEM_L1FONT30, get_xfont_size(CYR_FONT30), get_xfont_data(CYR_FONT30));
+	bt816_cmd_memwrite(MEM_L1GLYPH40, get_glyph_size(CYR_FONT40), get_glyph_data(CYR_FONT40));
+	bt816_cmd_memwrite(MEM_L1FONT40, get_xfont_size(CYR_FONT40), get_xfont_data(CYR_FONT40));
 }

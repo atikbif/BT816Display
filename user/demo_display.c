@@ -17,18 +17,6 @@
 
 const uint8_t str1[] = "\xd0\xa2\xd0\xb5\xd1\x81\xd1\x82\xd0\xbe\xd0\xb2\xd0\xb0\xd1\x8f\x20\xd1\x81\xd1\x82\xd1\x80\xd0\xbe\xd0\xba\xd0\xb0\x21";
 
-void init_display_fonts(void) {
-
-	bt816_cmd_memwrite(MEM_L1GLYPH14, get_glyph_size(CYR_FONT14), get_glyph_data(CYR_FONT14));
-	bt816_cmd_memwrite(MEM_L1FONT14, get_xfont_size(CYR_FONT14), get_xfont_data(CYR_FONT14));
-	bt816_cmd_memwrite(MEM_L1GLYPH22, get_glyph_size(CYR_FONT22), get_glyph_data(CYR_FONT22));
-	bt816_cmd_memwrite(MEM_L1FONT22, get_xfont_size(CYR_FONT22), get_xfont_data(CYR_FONT22));
-	bt816_cmd_memwrite(MEM_L1GLYPH30, get_glyph_size(CYR_FONT30), get_glyph_data(CYR_FONT30));
-	bt816_cmd_memwrite(MEM_L1FONT30, get_xfont_size(CYR_FONT30), get_xfont_data(CYR_FONT30));
-	bt816_cmd_memwrite(MEM_L1GLYPH40, get_glyph_size(CYR_FONT40), get_glyph_data(CYR_FONT40));
-	bt816_cmd_memwrite(MEM_L1FONT40, get_xfont_size(CYR_FONT40), get_xfont_data(CYR_FONT40));
-}
-
 void demo_display1(void) {
 	uint16_t offset = 0;
 	bt816_mem_write32(RAM_DL+offset, bt816_clear_color_rgb(0,0,0));offset+=4;

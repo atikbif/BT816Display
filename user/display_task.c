@@ -13,22 +13,29 @@
 #include "bt816_cmd.h"
 #include "keyboard.h"
 #include "mnemo.h"
+#include "menu.h"
 
 void lcd_task_function(void *pvParameters)
 {
+	uint16_t prev_key = 0;
+	uint16_t key_cmd = 0;
+	uint16_t tmr = 0;
+	uint8_t mnemo_num = 0;
 	bt816_init();
-	//init_display2();
-	//init_display_fonts();
-	init_mnemo();
-	read_mnemo_data(1);
+	//init_mnemo();
+	//read_mnemo_data(mnemo_num);
+	init_menu();
 	while(1)
 	{
-		//demo_display1();
-		//demo_display2();
-		//at32_led_toggle(LED_POW);
-		//display_value(get_pressed_keys());
-		//demo_display_fonts();
-		draw_mnemo();
+		//draw_mnemo();
+
+		uint16_t cur_key = get_pressed_keys();
+		if(cur_key && (cur_key!=prev_key)) {
+			key_cmd = cur_key;
+		}else key_cmd = 0;
+		prev_key = cur_key;
+
+		display_menu(key_cmd);
 		vTaskDelay(100);
 	}
 }

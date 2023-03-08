@@ -22,6 +22,12 @@ uint16_t calc_total_cnt = 0;
 
 calc_config calc[MAX_CALC_CNT];
 
+uint8_t plc_can_link = 0;
+uint8_t plc_eth_ip_state = 0;
+uint16_t plc_app_id = 0;
+uint8_t plc_can_addr = 0;
+
+
 void init_plc_data() {
 	for(uint16_t i=0;i<DI_CNT;i++) {
 		plc_di_state[i] = DI_OFF;
