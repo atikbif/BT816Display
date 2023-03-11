@@ -35,6 +35,7 @@
 #include "display_task.h"
 #include "keyboard.h"
 #include "plc_data.h"
+#include "can.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -43,6 +44,12 @@
 /** @addtogroup FreeRTOS_demo
   * @{
   */
+
+extern uint16_t can1_rx_tmr;
+extern uint16_t can1_tx_tmr;
+extern uint16_t hb_cnt;
+extern uint8_t plc_can_link;
+
 extern void tcpip_stack_init(void);
 extern void udpecho_init(void);
 extern void tcpecho_init(void);
@@ -81,6 +88,8 @@ int main(void)
 
   init_plc_data();
   read_calculation_config(0);
+
+  can1_init();
 
   /* enter critical */
   taskENTER_CRITICAL(); 
@@ -141,7 +150,8 @@ int main(void)
 
 void network_task_function(void *pvParameters)
 {
-	uint8_t cnt = 0;
+	uint16_t cnt = 0;
+	uint16_t calc_cnt = 0;
 	while(emac_system_init() == ERROR);
 	tcpip_stack_init();
 	udpecho_init();
@@ -149,10 +159,30 @@ void network_task_function(void *pvParameters)
 	while(1)
 	{
 		cnt++;
-		if(cnt%10==0) imitate_plc_data();
-		plc_data_calculate();
+		if(cnt%1000==0) {
+			//imitate_plc_data();
+			send_heartbeat();
+		}
+		if(cnt%100==0) {
+			plc_data_calculate();
+		}
+		can1_rx_tmr++;
+		if(can1_rx_tmr>=20) {
+			can1_rx_tmr = 0;
+			gpio_bits_reset(GPIOG,GPIO_PINS_4);
+		}
+		can1_tx_tmr++;
+		if(can1_tx_tmr>=20) {
+			can1_tx_tmr = 0;
+			gpio_bits_reset(GPIOG,GPIO_PINS_3);
+		}
+		hb_cnt++;
+		if(hb_cnt>=3000) {
+			hb_cnt = 0;
+			plc_can_link = 0;
+		}
 		//at32_led_toggle(LED_POW);
-		vTaskDelay(100);
+		vTaskDelay(1);
 
 	}
 }

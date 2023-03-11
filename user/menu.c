@@ -14,6 +14,7 @@
 #include "plc_data.h"
 #include "var_link.h"
 #include <string.h>
+#include "can.h"
 
 uint8_t mnemo_num = 0;
 extern uint16_t mnemo_cnt;
@@ -296,7 +297,7 @@ static uint8_t get_manage_var(uint16_t i, manage_var *var) {
 		}
 		if(i<5) {
 			var->link_type = VAR_LINK_CL_REG;
-			var->link_index = i;
+			var->link_index = i+10;
 			var->min = 0;
 			var->max = 15000;
 		}else if(i<10) {
@@ -331,20 +332,33 @@ static uint8_t get_manage_var(uint16_t i, manage_var *var) {
 }
 
 void write_var_to_plc(manage_var *var) {
+	if(plc_can_link==0) return;
 	if(var->value>var->max) var->value = var->max;
 	if(var->value<var->min) var->value = var->min;
 	switch(var->link_type) {
 		case VAR_LINK_CL_REG:
-			if(var->link_index<CLUSTER_REGS_CNT) plc_clust_regs[var->link_index] = var->value;
+			if(var->link_index<CLUSTER_REGS_CNT) {
+				plc_clust_regs[var->link_index] = var->value;
+				write_clust_reg(var->link_index, var->value);
+			}
 			break;
 		case VAR_LINK_NET_REG:
-			if(var->link_index<NET_REGS_CNT) plc_net_regs[var->link_index] = var->value;
+			if(var->link_index<NET_REGS_CNT) {
+				plc_net_regs[var->link_index] = var->value;
+				write_net_reg(var->link_index, var->value);
+			}
 			break;
 		case VAR_LINK_CL_BIT:
-			if(var->link_index<CLUST_BITS_CNT) plc_clust_bits[var->link_index] = var->value;
+			if(var->link_index<CLUST_BITS_CNT) {
+				plc_clust_bits[var->link_index] = var->value;
+				write_clust_bit(var->link_index, var->value);
+			}
 			break;
 		case VAR_LINK_NET_BIT:
-			if(var->link_index<NET_BITS_CNT) plc_net_bits[var->link_index] = var->value;
+			if(var->link_index<NET_BITS_CNT) {
+				plc_net_bits[var->link_index] = var->value;
+				write_net_bit(var->link_index, var->value);
+			}
 			break;
 	}
 }
@@ -747,11 +761,11 @@ void ai_menu(uint16_t key) {
 				break;
 			case AI_U:
 				bt816_cmd_number(data_x_pos, y_pos, 22, 0, plc_ain_raw[i]);
-				bt816_cmd_text(data_measure_pos,y_pos,22,0,"mV");
+				bt816_cmd_text(data_measure_pos,y_pos,22,0,"");
 				break;
 			case AI_I:
 				bt816_cmd_number(data_x_pos, y_pos, 22, 0, plc_ain_raw[i]);
-				bt816_cmd_text(data_measure_pos,y_pos,22,0,"uA");
+				bt816_cmd_text(data_measure_pos,y_pos,22,0,"");
 				break;
 		}
 		y_pos+=step;
