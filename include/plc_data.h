@@ -14,7 +14,7 @@
 #define DO_CNT	6
 #define AI_CNT	14
 #define CLUST_BITS_CNT	224
-#define CLUSTER_REGS_CNT	16
+#define CLUSTER_REGS_CNT	64
 #define NET_BITS_CNT	16
 #define NET_REGS_CNT	16
 

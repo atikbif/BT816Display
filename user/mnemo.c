@@ -13,17 +13,11 @@
 #include "lamps.h"
 #include "ram_map.h"
 #include "plc_data.h"
+#include "var_link.h"
 
 uint16_t mnemo_cnt = 0;
 
-#define VAR_LINK_DI			0
-#define VAR_LINK_DO			1
-#define VAR_LINK_RAW_AI		2
-#define VAR_LINK_CL_BIT		3
-#define VAR_LINK_CL_REG		4
-#define VAR_LINK_NET_BIT	5
-#define VAR_LINK_NET_REG	6
-#define VAR_LINK_CALC		7
+
 
 #define MNEMO_DESCR_START			0x15A2
 #define MNEMO_ID_LAMP 				1

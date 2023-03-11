@@ -133,6 +133,13 @@ void plc_data_calculate() {
 }
 
 void imitate_plc_data() {
+	for(uint8_t i=0;i<8;i++) {
+		plc_di_type[i] = DI_USED;
+	}
+	for(uint8_t i=0;i<6;i++) {
+		plc_ai_type[i] = AI_U;
+		plc_ai_type[i+6] = AI_I;
+	}
 	static uint8_t cnt = 0;
 	const uint16_t discr[16] = {0x0300, 0x0201, 0x1001, 0x1003, 0x1000, 0x3002, 0x20FF, 0x00FF,
 								0x0107, 0x0207, 0x0407, 0x0800, 0x1000, 0x2001, 0x3001, 0x0001};
