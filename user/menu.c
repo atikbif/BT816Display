@@ -144,7 +144,7 @@ void main_menu(uint16_t key) {
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
 	//bt816_cmd_setfont2(2,MEM_L1FONT22,0);
 	//bt816_cmd_setfont2(3,MEM_L1FONT30,0);
-	bt816_cmd_setfont2(4,MEM_L1FONT40,0);
+	bt816_cmd_setfont2(4,MEM_FONT40,0);
 
 	uint16_t x_pos = 200;
 	uint16_t y_pos = 75;
@@ -198,8 +198,8 @@ void help_menu(uint16_t key) {
 	bt816_cmd_dl(DL_COLOR_RGB | 0x00FFFFFF);
 
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
-	bt816_cmd_setfont2(2,MEM_L1FONT22,0);
-	bt816_cmd_setfont2(3,MEM_L1FONT30,0);
+	bt816_cmd_setfont2(2,MEM_FONT22,0);
+	bt816_cmd_setfont2(3,MEM_FONT30,0);
 	//bt816_cmd_setfont2(4,MEM_L1FONT40,0);
 
 	for(uint8_t i=0;i<HELP_STR_CNT;i++) {
@@ -224,7 +224,7 @@ void pc21_menu(uint16_t key) {
 
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
 	//bt816_cmd_setfont2(2,MEM_L1FONT22,0);
-	bt816_cmd_setfont2(3,MEM_L1FONT30,0);
+	bt816_cmd_setfont2(3,MEM_FONT30,0);
 	//bt816_cmd_setfont2(4,MEM_L1FONT40,0);
 
 	uint16_t x_pos = 50;
@@ -371,8 +371,8 @@ void edit_u16_menu(uint16_t key) {
 
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
 	//bt816_cmd_setfont2(2,MEM_L1FONT22,0);
-	bt816_cmd_setfont2(3,MEM_L1FONT30,0);
-	bt816_cmd_setfont2(4,MEM_L1FONT40,0);
+	bt816_cmd_setfont2(3,MEM_FONT30,0);
+	bt816_cmd_setfont2(4,MEM_FONT40,0);
 
 	bt816_cmd_text(50,50,3,0,"\xd0\x92\xd0\xb2\xd0\xb5\xd0\xb4\xd0\xb8\xd1\x82\xd0\xb5\x20\xd0\xb7\xd0\xbd\xd0\xb0\xd1\x87\xd0\xb5\xd0\xbd\xd0\xb8\xd0\xb5");
 	bt816_cmd_text(50,90,3,0,"\xd0\xb2\xd0\xbd\xd0\xb8\xd0\xb7\x20\x2d\x20\xd1\x81\xd0\xbe\xd1\x85\xd1\x80\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x82\xd1\x8c");
@@ -540,9 +540,9 @@ void manage_menu(uint16_t key) {
 	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
 
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
-	bt816_cmd_setfont2(2,MEM_L1FONT22,0);
+	bt816_cmd_setfont2(2,MEM_FONT22,0);
 	//bt816_cmd_setfont2(3,MEM_L1FONT30,0);
-	bt816_cmd_setfont2(4,MEM_L1FONT40,0);
+	bt816_cmd_setfont2(4,MEM_FONT40,0);
 
 	uint16_t x_pos = 50;
 	uint16_t y_pos = 50;
@@ -611,7 +611,7 @@ void diagn_menu(uint16_t key) {
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
 	//bt816_cmd_setfont2(2,MEM_L1FONT22,0);
 	//bt816_cmd_setfont2(3,MEM_L1FONT30,0);
-	bt816_cmd_setfont2(4,MEM_L1FONT40,0);
+	bt816_cmd_setfont2(4,MEM_FONT40,0);
 
 	uint16_t x_pos = 200;
 	uint16_t y_pos = 15;
@@ -666,7 +666,7 @@ void di_menu(uint16_t key) {
 	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
 
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
-	bt816_cmd_setfont2(2,MEM_L1FONT22,0);
+	bt816_cmd_setfont2(2,MEM_FONT22,0);
 	//bt816_cmd_setfont2(3,MEM_L1FONT30,0);
 	//bt816_cmd_setfont2(4,MEM_L1FONT40,0);
 
@@ -709,7 +709,7 @@ void do_menu(uint16_t key) {
 	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
 
 	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
-	bt816_cmd_setfont2(2,MEM_L1FONT22,0);
+	bt816_cmd_setfont2(2,MEM_FONT22,0);
 	//bt816_cmd_setfont2(3,MEM_L1FONT30,0);
 	//bt816_cmd_setfont2(4,MEM_L1FONT40,0);
 

@@ -22,9 +22,10 @@ void lcd_task_function(void *pvParameters)
 	uint16_t tmr = 0;
 	uint8_t mnemo_num = 0;
 	bt816_init();
+	init_display_fonts();
 	//init_mnemo();
 	//read_mnemo_data(mnemo_num);
-	init_menu();
+	//init_menu();
 	while(1)
 	{
 		//draw_mnemo();
@@ -35,7 +36,8 @@ void lcd_task_function(void *pvParameters)
 		}else key_cmd = 0;
 		prev_key = cur_key;
 
-		display_menu(key_cmd);
+		//display_menu(key_cmd);
+		demo_display_fonts();
 		vTaskDelay(100);
 	}
 }

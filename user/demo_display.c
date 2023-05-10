@@ -47,10 +47,15 @@ void demo_display_fonts(void) {
 	bt816_cmd_dl(DL_COLOR_RGB | GREEN);
 	//bt816_cmd_dl(DL_END);
 
-	bt816_cmd_setfont2(1,MEM_L1FONT14,0);
-	bt816_cmd_setfont2(2,MEM_L1FONT22,0);
-	bt816_cmd_setfont2(3,MEM_L1FONT30,0);
-	bt816_cmd_setfont2(4,MEM_L1FONT40,0);
+//	bt816_cmd_setfont2(1,MEM_L1FONT14,0);
+//	bt816_cmd_setfont2(2,MEM_L1FONT22,0);
+//	bt816_cmd_setfont2(3,MEM_L1FONT30,0);
+//	bt816_cmd_setfont2(4,MEM_L1FONT40,0);
+
+	bt816_cmd_setfont2(1,MEM_FONT14,0);
+	bt816_cmd_setfont2(2,MEM_FONT22,0);
+	bt816_cmd_setfont2(3,MEM_FONT30,0);
+	bt816_cmd_setfont2(4,MEM_FONT40,0);
 
 	uint8_t font1 = 1;
 	uint8_t font2 = 2;
