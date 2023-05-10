@@ -118,7 +118,7 @@
 #define BT816_OPT_FLAT             256U
 #define BT816_OPT_CENTERX          512U
 #define BT816_OPT_CENTERY          1024U
-#define BT816_OPT_CENTER           (BT816_OPT_CENTERX | BT816_OPT_CENTERX)
+#define BT816_OPT_CENTER           (BT816_OPT_CENTERX | BT816_OPT_CENTERY)
 #define BT816_OPT_NOBACK           4096U
 #define BT816_OPT_NOTICKS          8192U
 #define BT816_OPT_NOHM             16384U

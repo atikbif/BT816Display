@@ -15,6 +15,9 @@
 #include "var_link.h"
 #include <string.h>
 #include "can.h"
+#include "menu_list.h"
+#include "appl_info_menu.h"
+#include "test_menu.h"
 
 uint8_t mnemo_num = 0;
 extern uint16_t mnemo_cnt;
@@ -85,8 +88,7 @@ const uint8_t message_on[] = "\xd0\x92\xd0\x9a\xd0\x9b";
 const uint8_t message_off[] = "\xd0\x92\xd0\xab\xd0\x9a\xd0\x9b";
 const uint8_t message_short_circ[] = "\xd0\x97\xd0\x90\xd0\x9c\xd0\xab\xd0\x9a\xd0\x90\xd0\x9d\xd0\x98\xd0\x95";
 const uint8_t message_break[] = "\xd0\x9e\xd0\x91\xd0\xa0\xd0\xab\xd0\x92";
-enum MENU_LIST {MENU_MAIN, MENU_HELP, MENU_PC21, MENU_MNEMO, MENU_MANAGE, MENU_DIAGN, MENU_DI,
-	MENU_DO,MENU_AI,MENU_CLUST_BITS,MENU_NET_BITS,MENU_CLUST_REGS,MENU_NET_REGS,MENU_EDIT_U16,MENU_LIMIT};
+
 
 typedef void(*f_ptr)(uint16_t);
 
@@ -120,12 +122,12 @@ uint8_t u16var_text[6]="     ";
 uint16_t var_x_pos = 0;
 
 const f_ptr screen[] = {
-	main_menu,help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
+	main_menu,appl_info_menu,help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
 };
 
-enum MENU_LIST current_menu = MENU_MAIN;
+menu_list_t current_menu = MENU_MAIN;
 
 void display_menu(uint16_t key) {
 	if(current_menu>MENU_LIMIT) current_menu = MENU_MAIN;
@@ -141,23 +143,29 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(DL_CLEAR_COLOR_RGB | BLACK);
 	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
 
-	//bt816_cmd_setfont2(1,MEM_L1FONT14,0);
-	//bt816_cmd_setfont2(2,MEM_L1FONT22,0);
-	//bt816_cmd_setfont2(3,MEM_L1FONT30,0);
-	bt816_cmd_setfont2(4,MEM_FONT40,0);
+	uint32_t addr = 0x100000;
 
-	uint16_t x_pos = 200;
-	uint16_t y_pos = 75;
-	uint16_t width = 400;
-	uint16_t height = 50;
-	uint16_t distance = 20;
+	bt816_cmd_setbitmap(0x800000 | (addr/32), BT816_COMPRESSED_RGBA_ASTC_10x10_KHR, 800, 480);
+	bt816_cmd_dl(DL_BEGIN | BT816_BITMAPS);
+	bt816_cmd_dl(VERTEX2F(0, 0));
+	bt816_cmd_dl(DL_END);
 
-	bt816_cmd_fgcolor(COLOR_RGB(100, 0, 0));
-	bt816_cmd_button(x_pos, y_pos, width, height, 4, 0, message_help);
-	bt816_cmd_button(x_pos, y_pos + height + distance, width, height, 4, 0, message_plc);
-	bt816_cmd_button(x_pos, y_pos + (height + distance)*2, width, height, 4, 0, message_mnemo);
-	bt816_cmd_button(x_pos, y_pos + (height + distance)*3, width, height, 4, 0, message_manage);
-	bt816_cmd_button(x_pos, y_pos + (height + distance)*4, width, height, 4, 0, message_diagn);
+	test_appl_info_menu();
+
+//	bt816_cmd_setfont2(4,MEM_FONT40,0);
+//
+//	uint16_t x_pos = 200;
+//	uint16_t y_pos = 75;
+//	uint16_t width = 400;
+//	uint16_t height = 50;
+//	uint16_t distance = 20;
+//
+//	bt816_cmd_fgcolor(COLOR_RGB(100, 0, 0));
+//	bt816_cmd_button(x_pos, y_pos, width, height, 4, 0, message_help);
+//	bt816_cmd_button(x_pos, y_pos + height + distance, width, height, 4, 0, message_plc);
+//	bt816_cmd_button(x_pos, y_pos + (height + distance)*2, width, height, 4, 0, message_mnemo);
+//	bt816_cmd_button(x_pos, y_pos + (height + distance)*3, width, height, 4, 0, message_manage);
+//	bt816_cmd_button(x_pos, y_pos + (height + distance)*4, width, height, 4, 0, message_diagn);
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
