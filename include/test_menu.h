@@ -9,5 +9,7 @@
 #define INCLUDE_TEST_MENU_H_
 
 void test_appl_info_menu();
+void test_cluster_info_menu();
+void test_alarm_list_menu();
 
 #endif /* INCLUDE_TEST_MENU_H_ */

@@ -17,6 +17,8 @@
 #include "can.h"
 #include "menu_list.h"
 #include "appl_info_menu.h"
+#include "cluster_state_menu.h"
+#include "alarm_list_menu.h"
 #include "test_menu.h"
 
 uint8_t mnemo_num = 0;
@@ -122,7 +124,7 @@ uint8_t u16var_text[6]="     ";
 uint16_t var_x_pos = 0;
 
 const f_ptr screen[] = {
-	main_menu,appl_info_menu,help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
+	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
 };
@@ -150,7 +152,7 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-	test_appl_info_menu();
+	test_alarm_list_menu();
 
 //	bt816_cmd_setfont2(4,MEM_FONT40,0);
 //
