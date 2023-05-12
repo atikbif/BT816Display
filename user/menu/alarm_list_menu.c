@@ -26,8 +26,8 @@ static uint8_t alarm_text[MAX_ALARM_MESSAGE_LENGTH];
 
 alarm_info alarm_list[ALARM_LIST_SIZE];
 
-uint16_t first_visible_alarm_num = 0;
-uint16_t alarm_insert_position = 0;
+static uint16_t first_visible_alarm_num = 0;
+static uint16_t alarm_cnt = 0;
 
 extern menu_list_t current_menu;
 
@@ -35,12 +35,15 @@ static uint8_t get_additional_alarm_info(uint32_t addr, uint8_t *buf);
 static uint8_t get_alarm_description(uint16_t index);
 static uint8_t print_date(uint8_t *buf, time_info time);
 
+void clear_alarm_list() {
+	for(uint16_t i=0;i<ALARM_LIST_SIZE;i++) alarm_list[i].alarm_id=0;
+	alarm_cnt = 0;
+}
+
 void add_alarm(alarm_info info) {
-	if(alarm_insert_position >= ALARM_LIST_SIZE) {
-		for(uint16_t i=0;i<ALARM_LIST_SIZE-1;i++) alarm_list[i]=alarm_list[i+1];
-		alarm_insert_position = ALARM_LIST_SIZE-1;
-	}
-	alarm_list[alarm_insert_position++] = info;
+	for(uint16_t i=0;i<ALARM_LIST_SIZE-1;i++) alarm_list[ALARM_LIST_SIZE-1-i]=alarm_list[ALARM_LIST_SIZE-2-i];
+	if(alarm_cnt<ALARM_LIST_SIZE) alarm_cnt++;
+	alarm_list[0] = info;
 }
 
 uint8_t get_additional_alarm_info(uint32_t addr, uint8_t *buf) {
@@ -117,7 +120,7 @@ void alarm_info_menu(uint16_t key) {
 	bt816_cmd_setfont2(1,MEM_FONT14,0);
 
 	if(first_visible_alarm_num>=MESSAGE_CNT) up_sign=1;else up_sign=0;
-	if(first_visible_alarm_num+MESSAGE_CNT<alarm_insert_position) down_sign=1;else down_sign=0;
+	if(first_visible_alarm_num+MESSAGE_CNT<alarm_cnt) down_sign=1;else down_sign=0;
 
 	if(first_visible_alarm_num>ALARM_LIST_SIZE-MESSAGE_CNT) {
 		first_visible_alarm_num = ALARM_LIST_SIZE-MESSAGE_CNT;
@@ -156,6 +159,7 @@ void alarm_info_menu(uint16_t key) {
 		}
 	}
 
+
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
 
@@ -163,12 +167,15 @@ void alarm_info_menu(uint16_t key) {
 		case KEY_LEFT:
 			current_menu = MENU_MAIN;
 			break;
+		case KEY_RIGHT:
+			current_menu = MENU_CLR_ALARMS;
+			break;
 		case KEY_UP:
 			if(first_visible_alarm_num>=MESSAGE_CNT) first_visible_alarm_num-=MESSAGE_CNT;
 			else first_visible_alarm_num = 0;
 			break;
 		case KEY_DOWN:
-			if(first_visible_alarm_num+MESSAGE_CNT<alarm_insert_position) first_visible_alarm_num+=MESSAGE_CNT;
+			if(first_visible_alarm_num+MESSAGE_CNT<alarm_cnt) first_visible_alarm_num+=MESSAGE_CNT;
 			break;
 	}
 }

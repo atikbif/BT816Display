@@ -14,6 +14,7 @@
 #include "keyboard.h"
 #include "mnemo.h"
 #include "menu.h"
+#include "config.h"
 
 void lcd_task_function(void *pvParameters)
 {
@@ -22,6 +23,7 @@ void lcd_task_function(void *pvParameters)
 	uint16_t tmr = 0;
 	uint8_t mnemo_num = 0;
 	bt816_init();
+	read_config();
 	init_display_fonts();
 	//init_mnemo();
 	//read_mnemo_data(mnemo_num);
