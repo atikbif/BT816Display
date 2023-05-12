@@ -21,6 +21,7 @@
 #include "alarm_list_menu.h"
 #include "password_menu.h"
 #include "clear_alarms_menu.h"
+#include "diagnostic_menu.h"
 #include "test_menu.h"
 
 uint8_t mnemo_num = 0;
@@ -126,7 +127,7 @@ uint8_t u16var_text[6]="     ";
 uint16_t var_x_pos = 0;
 
 const f_ptr screen[] = {
-	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
+	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,diagnostic_menu,help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
 };
@@ -154,22 +155,7 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-	//test_clear_alarms_menu();
-
-//	bt816_cmd_setfont2(4,MEM_FONT40,0);
-//
-//	uint16_t x_pos = 200;
-//	uint16_t y_pos = 75;
-//	uint16_t width = 400;
-//	uint16_t height = 50;
-//	uint16_t distance = 20;
-//
-//	bt816_cmd_fgcolor(COLOR_RGB(100, 0, 0));
-//	bt816_cmd_button(x_pos, y_pos, width, height, 4, 0, message_help);
-//	bt816_cmd_button(x_pos, y_pos + height + distance, width, height, 4, 0, message_plc);
-//	bt816_cmd_button(x_pos, y_pos + (height + distance)*2, width, height, 4, 0, message_mnemo);
-//	bt816_cmd_button(x_pos, y_pos + (height + distance)*3, width, height, 4, 0, message_manage);
-//	bt816_cmd_button(x_pos, y_pos + (height + distance)*4, width, height, 4, 0, message_diagn);
+	//test_diagnostic_menu();
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
@@ -183,11 +169,9 @@ void main_menu(uint16_t key) {
 			break;
 		case KEY_3:
 			current_menu = MENU_ALARM_LIST;
-			init_mnemo();
-			mnemo_num = 0;
-			read_mnemo_data(mnemo_num);
 			break;
 		case KEY_4:
+			current_menu = MENU_DIAGNOSTIC;
 			break;
 		case KEY_5:
 			break;

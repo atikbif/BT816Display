@@ -25,8 +25,8 @@ void lcd_task_function(void *pvParameters)
 	bt816_init();
 	read_config();
 	init_display_fonts();
-	//init_mnemo();
-	//read_mnemo_data(mnemo_num);
+	init_mnemo();
+	read_mnemo_data(mnemo_num);
 	init_menu();
 	while(1)
 	{
