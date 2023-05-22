@@ -9,6 +9,9 @@
 #include "at32f435_437_board.h"
 #include <string.h>
 #include "plc_data.h"
+#include "cluster_state.h"
+
+extern cluster cl;
 
 enum Service_type {SRV_Channel, SRV_Heartbeat, SRV_Download, SRV_Spare, SRV_Write, SRV_Read, SRV_Action, SRV_Event};
 enum SS_type {SS_Req_not_fragm, SS_Req_fragm, SS_Success_resp_not_fragm, SS_Success_resp_fragm, SS_Err_resp_not_fragm, SS_Err_resp_fragm, SS_Wait_resp_not_fragm, SS_Wait_resp_fragm};
@@ -45,6 +48,8 @@ static uint8_t start_bit = 0;
 static uint8_t packed_state = 0;
 static uint8_t packed_fault = 0;
 static uint8_t packed_mask = 0;
+
+uint8_t get_io_names_flag = 0;
 
 
 struct can_packet_id {
@@ -105,9 +110,13 @@ void check_can_rx_data(can_rx_message_type *rx) {
 		struct can_packet_id *can_id = (struct can_packet_id *)(&rx_packet.id);
 		if(can_id->srv==SRV_Heartbeat) {
 			hb_cnt = 0;
+			if(plc_can_link) {
+				get_io_names_flag = 1;
+			}
 			plc_can_link = 1;
 			plc_can_addr = can_id->node_addr;
 			cluster_addr = can_id->clust_addr;
+			cl.pc21.heartbeat = intern_addr;
 		}else /*if(can_id->srv==SRV_Event)*/ {
 			switch(eoid) {
 			case 0x01:	// di do
@@ -119,16 +128,38 @@ void check_can_rx_data(can_rx_message_type *rx) {
 					if(packed_mask & (1<<i)) {
 						if((start_bit+i>=1) && (start_bit+i<=DI_CNT)) {
 							plc_di_type[start_bit+i-1] = DI_USED;
-							if(packed_fault & (1<<i)) plc_di_state[start_bit+i-1] = DI_FAULT;
+							cl.pc21.din[start_bit+i-1].used = 1;
+							if(packed_fault & (1<<i)) {
+								plc_di_state[start_bit+i-1] = DI_FAULT;
+								cl.pc21.din[start_bit+i-1].fault = 1;
+								cl.pc21.din[start_bit+i-1].state = 0;
+							}
 							else {
-								if(packed_state & (1<<i)) plc_di_state[start_bit+i-1] = DI_ON;
-								else plc_di_state[start_bit+i-1] = DI_OFF;
+								cl.pc21.din[start_bit+i-1].fault = 0;
+								if(packed_state & (1<<i)) {
+									plc_di_state[start_bit+i-1] = DI_ON;
+									cl.pc21.din[start_bit+i-1].state = 1;
+								}
+								else {
+									plc_di_state[start_bit+i-1] = DI_OFF;
+									cl.pc21.din[start_bit+i-1].state = 0;
+								}
 							}
 						}else if((start_bit+i>=129) && (start_bit+i-129<DO_CNT)) {
-							if(packed_fault & (1<<i)) plc_do_state[start_bit+i-129] = DO_FAULT;
+							if(packed_fault & (1<<i)) {
+								plc_do_state[start_bit+i-129] = DO_FAULT;
+								cl.pc21.dout[start_bit+i-129].fault = 1;
+							}
 							else {
-								if(packed_state & (1<<i)) plc_do_state[start_bit+i-129] = DO_ON;
-								else plc_do_state[start_bit+i-129] = DO_OFF;
+								cl.pc21.dout[start_bit+i-129].fault = 0;
+								if(packed_state & (1<<i)) {
+									plc_do_state[start_bit+i-129] = DO_ON;
+									cl.pc21.dout[start_bit+i-129].state = 1;
+								}
+								else {
+									plc_do_state[start_bit+i-129] = DO_OFF;
+									cl.pc21.dout[start_bit+i-129].state = 0;
+								}
 							}
 						}
 					}
@@ -143,8 +174,10 @@ void check_can_rx_data(can_rx_message_type *rx) {
 						if(packed_mask&(1<<i)) {
 							if(packed_state&(1<<i)) {
 								plc_clust_bits[intern_addr+i-16] = 1;
+								cl.cluster_bits[intern_addr+i-16] = 1;
 							}else {
 								plc_clust_bits[intern_addr+i-16] = 0;
+								cl.cluster_bits[intern_addr+i-16] = 0;
 							}
 						}
 					}
@@ -153,11 +186,16 @@ void check_can_rx_data(can_rx_message_type *rx) {
 			case 0x05:	// ai
 				if((intern_addr>=1) &&(intern_addr<=AI_CNT)) {
 					plc_ain_raw[intern_addr-1] = ((uint16_t)rx_packet.data[7]<<8)|rx_packet.data[6];
+					cl.pc21.ain[intern_addr-1].raw = ((uint16_t)rx_packet.data[7]<<8)|rx_packet.data[6];
+					cl.pc21.ain[intern_addr-1].fault = ((uint16_t)rx_packet.data[5]<<8)|rx_packet.data[4];
+					cl.pc21.ain[intern_addr-1].tdu = rx_packet.data[3];
+					cl.pc21.ain[intern_addr-1].value = rx_packet.data[2];
 				}
 				break;
 			case 0x06:
 				if((intern_addr-17)<CLUSTER_REGS_CNT) {
 					plc_clust_regs[intern_addr-17] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
+					cl.cluster_regs[intern_addr-17] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
 				}
 				break;
 			case 0x0A:
@@ -165,13 +203,26 @@ void check_can_rx_data(can_rx_message_type *rx) {
 				if(rx_packet.data[4]==0) {
 					for(uint8_t i=0;i<16;i++) {
 						if(i<AI_CNT) {
-							if(mask & (1<<i)) plc_ai_type[i] = AI_U;else plc_di_type[i] = AI_UNUSED;
+							if(mask & (1<<i)) {
+								plc_ai_type[i] = AI_U;
+								cl.pc21.ain[i].used = 1;
+							}
+							else {
+								plc_di_type[i] = AI_UNUSED;
+								cl.pc21.ain[i].used = 0;
+							}
 						}
 					}
 				}else if(rx_packet.data[4]==1) {
 					for(uint8_t i=0;i<16;i++) {
 						if(i<DI_CNT) {
-							if(mask & (1<<i)) plc_di_type[i] = DI_USED;else plc_di_type[i] = DI_UNUSED;
+							if(mask & (1<<i)) {
+								plc_di_type[i] = DI_USED;
+								cl.pc21.din[i].used = 1;
+							}else {
+								plc_di_type[i] = DI_UNUSED;
+								cl.pc21.din[i].used = 0;
+							}
 						}
 					}
 				}
@@ -186,8 +237,10 @@ void check_can_rx_data(can_rx_message_type *rx) {
 						if(packed_mask&(1<<i)) {
 							if(packed_state&(1<<i)) {
 								plc_net_bits[intern_addr+i] = 1;
+								cl.net_bits[intern_addr+i] = 1;
 							}else {
 								plc_net_bits[intern_addr+i] = 0;
+								cl.net_bits[intern_addr+i] = 0;
 							}
 						}
 					}
@@ -197,13 +250,16 @@ void check_can_rx_data(can_rx_message_type *rx) {
 				intern_addr = intern_addr - (can_id->clust_addr*16) - 1;
 				if(intern_addr<NET_REGS_CNT) {
 					plc_net_regs[intern_addr-1] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
+					cl.net_regs[intern_addr-1] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
 				}
 				break;
 			case 0x1F:
 				if(intern_addr==3) {
 					plc_app_id = (rx_packet.data[2] | ((uint16_t)rx_packet.data[3]<<8));
+					cl.pc21.app_id = (rx_packet.data[2] | ((uint16_t)rx_packet.data[3]<<8));
 				}else if(intern_addr==17) {
 					plc_eth_ip_state = rx_packet.data[2];
+					cl.pc21.ethip_state = rx_packet.data[2];
 				}
 				break;
 			}

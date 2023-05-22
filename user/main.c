@@ -36,6 +36,8 @@
 #include "keyboard.h"
 #include "plc_data.h"
 #include "can.h"
+#include "cluster_state.h"
+#include "cur_time.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -49,6 +51,8 @@ extern uint16_t can1_rx_tmr;
 extern uint16_t can1_tx_tmr;
 extern uint16_t hb_cnt;
 extern uint8_t plc_can_link;
+extern uint8_t get_io_names_flag;
+extern cluster cl;
 
 extern void tcpip_stack_init(void);
 extern void udpecho_init(void);
@@ -90,6 +94,9 @@ int main(void)
   read_calculation_config(0);
 
   can1_init();
+
+  init_cluster(&cl);
+  init_cur_time();
 
   /* enter critical */
   taskENTER_CRITICAL(); 
@@ -163,6 +170,11 @@ void network_task_function(void *pvParameters)
 			//imitate_plc_data();
 			at32_led_toggle(LED_POW);
 			send_heartbeat();
+		}
+		if(get_io_names_flag) {
+			// send can request
+			get_io_names_flag++;
+			if(get_io_names_flag>=10) get_io_names_flag = 0;
 		}
 		if(cnt%100==0) {
 			plc_data_calculate();

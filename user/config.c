@@ -10,6 +10,7 @@
 #include "appl_info_menu.h"
 #include "cluster_state_menu.h"
 #include "alarm_list_menu.h"
+#include "password_menu.h"
 #include <string.h>
 
 extern appl_info_data_type appl_info_data;
