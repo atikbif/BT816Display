@@ -12,6 +12,7 @@
 #include "keys.h"
 #include "menu_list.h"
 #include "cluster_state_menu.h"
+#include "pc21_state_menu.h"
 
 extern menu_list_t current_menu;
 extern cluster_info_data_type cluster_data;
@@ -72,10 +73,14 @@ void diagnostic_menu(uint16_t key) {
 				current_menu = MENU_MAIN;
 				break;
 			case KEY_RIGHT:
+				current_menu = MENU_DIAGNOSTIC2;
 				break;
 			case KEY_0:
 				if(cluster_data.used_plc[0]) {
-
+					if(cluster_data.plc_type[0]==PC21_1) {
+						set_pc21_addr(1);
+						current_menu = MENU_PC21_STATE;
+					}
 				}
 				break;
 			case KEY_1:

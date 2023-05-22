@@ -12,6 +12,7 @@
 #include "password_menu.h"
 #include "clear_alarms_menu.h"
 #include "diagnostic_menu.h"
+#include "pc21_state_menu.h"
 #include "menu_list.h"
 #include <string.h>
 
@@ -73,4 +74,8 @@ void test_clear_alarms_menu() {
 
 void test_diagnostic_menu() {
 	current_menu = MENU_DIAGNOSTIC;
+}
+
+void test_pc21_state_menu() {
+	current_menu = MENU_PC21_STATE;
 }

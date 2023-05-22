@@ -67,9 +67,5 @@ typedef struct {
 }cluster;
 
 void init_cluster(cluster *clust);
-uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf); // return length
-uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf);
-uint8_t get_net_reg_name(uint16_t num, uint8_t *buf);
-uint8_t get_net_bit_name(uint16_t num, uint8_t *buf);
 
 #endif /* USER_CLUSTER_STATE_H_ */

@@ -6,6 +6,7 @@
  */
 
 #include "plc_data.h"
+#include "cluster_state.h"
 
 enum DI_STATE plc_di_state[DI_CNT];
 enum DO_STATE plc_do_state[DO_CNT];
@@ -26,6 +27,8 @@ uint8_t plc_can_link = 0;
 uint8_t plc_eth_ip_state = 0;
 uint16_t plc_app_id = 0;
 uint8_t plc_can_addr = 0;
+
+extern cluster cl;
 
 
 void init_plc_data() {
@@ -50,31 +53,18 @@ void init_plc_data() {
 	}
 }
 
-void read_calculation_config(const uint8_t *ptr) {
-	// imitation read from flash
-	calc_total_cnt = 4;
-	for(uint16_t i=0;i<calc_total_cnt;i++) {
-		calc[i].k = 2.5;
-		calc[i].b = 10;
-		calc[i].link = LINK_RAW;
-		calc[i].index = i;
-		calc[i].result = 0;
-		calc[i].prec = PR2;
-	}
-}
+
 
 void plc_data_calculate() {
 	for(uint16_t i=0;i<calc_total_cnt;i++) {
 		int32_t source_data = 0;
 		switch(calc[i].link) {
 			case LINK_RAW:
-				if(calc[i].index<AI_CNT) source_data = plc_ain_raw[calc[i].index];
+				if(calc[i].index<AI_CNT) source_data = cl.pc21.ain[calc[i].index].value;
 				break;
 			case LINK_2RAW:
 				if(calc[i].index<AI_CNT-1) {
-					source_data = plc_ain_raw[calc[i].index];
-					source_data = source_data << 16;
-					source_data |= plc_ain_raw[calc[i].index+1];
+					source_data = cl.pc21.ain[calc[i].index].raw;
 				}
 				break;
 			case LINK_CLUST_REGS:

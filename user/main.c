@@ -38,6 +38,7 @@
 #include "can.h"
 #include "cluster_state.h"
 #include "cur_time.h"
+#include "config.h"
 
 /** @addtogroup UTILITIES_examples
   * @{

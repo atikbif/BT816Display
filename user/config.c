@@ -11,10 +11,13 @@
 #include "cluster_state_menu.h"
 #include "alarm_list_menu.h"
 #include "password_menu.h"
+#include "plc_data.h"
 #include <string.h>
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
+extern calc_config calc[MAX_CALC_CNT];
+extern uint16_t calc_total_cnt;
 
 void read_config() {
 	const char appl_name[] = "test";
@@ -53,4 +56,52 @@ void read_config() {
 
 	uint8_t passwd[6]={1,1,1,1,1,1};
 	set_passwd_value(passwd);
+}
+
+uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf) {
+	return 0;
+}
+
+uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf) {
+	return 0;
+}
+
+uint8_t get_net_reg_name(uint16_t num, uint8_t *buf) {
+	return 0;
+}
+
+uint8_t get_net_bit_name(uint16_t num, uint8_t *buf) {
+	return 0;
+}
+
+uint8_t get_ai_meas_unit(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
+	buf[0] = 'p';
+	buf[1] = 'p';
+	buf[2] = 'm';
+	buf[3] = 0;
+
+	return 3;
+}
+
+uint8_t get_inp_name(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
+	buf[0] = 'I';
+	buf[1] = 'N';
+	buf[2] = 'P';
+	buf[3] = (inp_num/10)+'0';
+	buf[4] = (inp_num%10) + '0';
+	buf[5] = 0;
+	return 5;
+}
+
+void read_calculation_config(const uint8_t *ptr) {
+	// imitation read from flash
+	calc_total_cnt = 14;
+	for(uint16_t i=0;i<calc_total_cnt;i++) {
+		calc[i].k = 2.5;
+		calc[i].b = 10;
+		calc[i].link = LINK_RAW;
+		calc[i].index = i;
+		calc[i].result = 0;
+		calc[i].prec = PR1;
+	}
 }
