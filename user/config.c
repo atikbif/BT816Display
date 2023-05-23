@@ -196,6 +196,53 @@ uint16_t get_out_cnt_with_descr(uint8_t dev_num) {
 	return 3;
 }
 
+uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf) {
+	const char msg1[] = "P1 PSW TMR";
+	const char msg2[] = "MULTI_MOTOR";
+	const char msg3[] = "POST START";
+	const char msg4[] = "RUN UP TIME";
+	const char msg5[] = "CONT USED";
+	const char msg6[] = "CONT IN";
+	const char msg7[] = "CONT OUT";
+	uint8_t res = 0;
+	switch(num) {
+		case 0:
+			memcpy(buf,msg1,sizeof(msg1));
+			res = strlen(msg1);
+			break;
+		case 1:
+			memcpy(buf,msg2,sizeof(msg2));
+			res = strlen(msg2);
+			break;
+		case 2:
+			memcpy(buf,msg3,sizeof(msg3));
+			res = strlen(msg3);
+			break;
+		case 3:
+			memcpy(buf,msg4,sizeof(msg4));
+			res = strlen(msg4);
+			break;
+		case 4:
+			memcpy(buf,msg5,sizeof(msg5));
+			res = strlen(msg5);
+			break;
+		case 5:
+			memcpy(buf,msg6,sizeof(msg6));
+			res = strlen(msg6);
+			break;
+		case 6:
+			memcpy(buf,msg7,sizeof(msg7));
+			res = strlen(msg7);
+			break;
+	}
+	return res;
+}
+
+uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf) {
+	uint8_t res = 0;
+	return res;
+}
+
 void read_calculation_config(const uint8_t *ptr) {
 	// imitation read from flash
 	calc_total_cnt = 14;

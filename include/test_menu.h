@@ -15,5 +15,6 @@ void test_passwd_menu();
 void test_diagnostic_menu();
 void test_pc21_state_menu();
 void test_cross_ref_menu();
+void test_glob_integers_menu();
 
 #endif /* INCLUDE_TEST_MENU_H_ */
