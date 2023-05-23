@@ -46,6 +46,7 @@ void diagnostic_menu2(uint16_t key) {
 				current_menu = MENU_GLOB_INT;
 				break;
 			case KEY_3:
+				current_menu = MENU_GLOB_BITS;
 				break;
 			case KEY_4:
 				break;

@@ -15,6 +15,7 @@
 #include "pc21_state_menu.h"
 #include "cross_reference_menu.h"
 #include "global_integers_menu.h"
+#include "global_bits_menu.h"
 #include "menu_list.h"
 #include <string.h>
 
@@ -88,4 +89,8 @@ void test_cross_ref_menu() {
 
 void test_glob_integers_menu() {
 	current_menu = MENU_GLOB_INT;
+}
+
+void test_glob_bits_menu() {
+	current_menu = MENU_GLOB_BITS;
 }

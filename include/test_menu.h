@@ -16,5 +16,6 @@ void test_diagnostic_menu();
 void test_pc21_state_menu();
 void test_cross_ref_menu();
 void test_glob_integers_menu();
+void test_glob_bits_menu();
 
 #endif /* INCLUDE_TEST_MENU_H_ */

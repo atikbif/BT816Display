@@ -30,17 +30,17 @@ void read_config() {
 	memcpy(appl_info_data.name,appl_name,strlen(appl_name));
 
 	cluster_data.used_plc[0]=1;
-	cluster_data.used_plc[1]=1;
-	cluster_data.used_plc[3]=1;
-	cluster_data.used_plc[7]=1;
-	cluster_data.plc_link[0]=1;
-	cluster_data.plc_link[1]=1;
-	cluster_data.plc_link[3]=1;
+	cluster_data.used_plc[1]=0;
+	cluster_data.used_plc[3]=0;
+	cluster_data.used_plc[7]=0;
+	cluster_data.plc_link[0]=0;
+	cluster_data.plc_link[1]=0;
+	cluster_data.plc_link[3]=0;
 	cluster_data.plc_link[7]=0;
 	cluster_data.plc_type[0] = PC21_1;
-	cluster_data.plc_type[1] = PC21_CD;
-	cluster_data.plc_type[3] = PC21_MC;
-	cluster_data.plc_type[7] = PC21_2T;
+	//cluster_data.plc_type[1] = PC21_CD;
+	//cluster_data.plc_type[3] = PC21_MC;
+	//cluster_data.plc_type[7] = PC21_2T;
 
 	for(uint8_t i=0;i<3;i++) {
 		alarm_info info;
@@ -239,7 +239,44 @@ uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf) {
 }
 
 uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf) {
+	const char msg1[] = "P1 LOCKOUT";
+	const char msg2[] = "P1 OPEN CIRC";
+	const char msg3[] = "P1 SHORT CIRC";
+	const char msg4[] = "P1 CLEAR";
+	const char msg5[] = "P1 PSW FAILED";
+	const char msg6[] = "P1 SCADA STOP";
+	const char msg7[] = "P1 CONT FAIL";
 	uint8_t res = 0;
+	switch(num) {
+		case 0:
+			memcpy(buf,msg1,sizeof(msg1));
+			res = strlen(msg1);
+			break;
+		case 1:
+			memcpy(buf,msg2,sizeof(msg2));
+			res = strlen(msg2);
+			break;
+		case 2:
+			memcpy(buf,msg3,sizeof(msg3));
+			res = strlen(msg3);
+			break;
+		case 3:
+			memcpy(buf,msg4,sizeof(msg4));
+			res = strlen(msg4);
+			break;
+		case 4:
+			memcpy(buf,msg5,sizeof(msg5));
+			res = strlen(msg5);
+			break;
+		case 5:
+			memcpy(buf,msg6,sizeof(msg6));
+			res = strlen(msg6);
+			break;
+		case 6:
+			memcpy(buf,msg7,sizeof(msg7));
+			res = strlen(msg7);
+			break;
+	}
 	return res;
 }
 
