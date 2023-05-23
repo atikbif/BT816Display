@@ -24,6 +24,7 @@
 #include "diagnostic_menu.h"
 #include "diagnostic_menu2.h"
 #include "pc21_state_menu.h"
+#include "cross_reference_menu.h"
 #include "test_menu.h"
 
 uint8_t mnemo_num = 0;
@@ -130,7 +131,7 @@ uint16_t var_x_pos = 0;
 
 const f_ptr screen[] = {
 	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,diagnostic_menu,
-	diagnostic_menu2,pc21_state_menu, help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
+	diagnostic_menu2,pc21_state_menu, cross_reference_menu, help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
 };
@@ -158,7 +159,7 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-	//test_pc21_state_menu();
+	//test_cross_ref_menu();
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);

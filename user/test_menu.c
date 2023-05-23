@@ -13,6 +13,7 @@
 #include "clear_alarms_menu.h"
 #include "diagnostic_menu.h"
 #include "pc21_state_menu.h"
+#include "cross_reference_menu.h"
 #include "menu_list.h"
 #include <string.h>
 
@@ -78,4 +79,8 @@ void test_diagnostic_menu() {
 
 void test_pc21_state_menu() {
 	current_menu = MENU_PC21_STATE;
+}
+
+void test_cross_ref_menu() {
+	current_menu = MENU_CROSS_REF;
 }

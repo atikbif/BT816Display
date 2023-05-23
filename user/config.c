@@ -93,6 +93,109 @@ uint8_t get_inp_name(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
 	return 5;
 }
 
+uint8_t get_inp_description(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
+	uint8_t res = 0;
+	const char msg1[] = "\xd0\xa3\xd0\x94\xd0\x90\xd0\x9b\xd0\x81\xd0\x9d\xd0\x9d\xd0\xab\xd0\x99\x20\xd0\x9f\xd0\xa3\xd0\xa1\xd0\x9a";
+	const char msg2[] = "\xd0\xa3\xd0\x94\xd0\x90\xd0\x9b\xd0\x81\xd0\x9d\xd0\x9d\xd0\xab\xd0\x99\x20\xd0\xa1\xd0\xa2\xd0\x9e\xd0\x9f";
+	const char msg3[] = "\xd0\x9c\xd0\xb5\xd1\x81\xd1\x82\xd0\xbd\xd1\x8b\xd0\xb9\x20\xd0\xbf\xd1\x83\xd1\x81\xd0\xba";
+	const char msg4[] = "\xd0\x9c\xd0\xb5\xd1\x81\xd1\x82\xd0\xbd\xd1\x8b\xd0\xb9\x20\xd1\x81\xd1\x82\xd0\xbe\xd0\xbf";
+	const char msg5[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x31";
+	const char msg6[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x32";
+	const char msg7[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x33";
+	const char msg8[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x34";
+	const char msg9[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x35";
+	const char msg10[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x36";
+	const char msg11[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x37";
+	const char msg12[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x38";
+	const char msg13[] = "\xd0\x9f\xd0\xb0\xd1\x80\xd0\xb0\xd0\xbc\xd0\xb5\xd1\x82\xd1\x80\x20\x39";
+	switch(inp_num) {
+		case 0:
+			memcpy(buf,msg1,sizeof(msg1));
+			res = strlen(msg1);
+			break;
+		case 1:
+			memcpy(buf,msg2,sizeof(msg2));
+			res = strlen(msg2);
+			break;
+		case 2:
+			memcpy(buf,msg3,sizeof(msg3));
+			res = strlen(msg3);
+			break;
+		case 3:
+			memcpy(buf,msg4,sizeof(msg4));
+			res = strlen(msg4);
+			break;
+		case 4:
+			memcpy(buf,msg5,sizeof(msg5));
+			res = strlen(msg5);
+			break;
+		case 5:
+			memcpy(buf,msg6,sizeof(msg6));
+			res = strlen(msg6);
+			break;
+		case 6:
+			memcpy(buf,msg7,sizeof(msg7));
+			res = strlen(msg7);
+			break;
+		case 7:
+			memcpy(buf,msg8,sizeof(msg8));
+			res = strlen(msg8);
+			break;
+		case 8:
+			memcpy(buf,msg9,sizeof(msg9));
+			res = strlen(msg9);
+			break;
+		case 9:
+			memcpy(buf,msg10,sizeof(msg10));
+			res = strlen(msg10);
+			break;
+		case 10:
+			memcpy(buf,msg11,sizeof(msg11));
+			res = strlen(msg11);
+			break;
+		case 11:
+			memcpy(buf,msg12,sizeof(msg12));
+			res = strlen(msg12);
+			break;
+		case 12:
+			memcpy(buf,msg13,sizeof(msg13));
+			res = strlen(msg13);
+			break;
+
+	}
+	return res;
+}
+
+uint8_t get_out_description(uint8_t dev_num, uint8_t out_num, uint8_t *buf) {
+	uint8_t res = 0;
+	const char msg1[] = "\x50\x31\x20\xd0\x9f\xd0\xa0\xd0\x9e\xd0\xa1\xd0\xab\xd0\x9f\xd0\xac";
+	const char msg2[] = "\x50\x31\x20\xd0\xa1\xd0\xa5\xd0\x9e\xd0\x94\x20\xd0\x9b\xd0\x95\xd0\x9d\xd0\xa2\xd0\xab";
+	const char msg3[] = "\x50\x31\x20\xd0\x9f\xd0\xa0\xd0\x9e\xd0\xa0\xd0\xab\xd0\x92\x20\xd0\x9b\xd0\x95\xd0\x9d\xd0\xa2\xd0\xab";
+	switch(out_num) {
+		case 0:
+			memcpy(buf,msg1,sizeof(msg1));
+			res = strlen(msg1);
+			break;
+		case 1:
+			memcpy(buf,msg2,sizeof(msg2));
+			res = strlen(msg2);
+			break;
+		case 2:
+			memcpy(buf,msg3,sizeof(msg3));
+			res = strlen(msg3);
+			break;
+	}
+	return res;
+}
+
+uint16_t get_inp_cnt_with_descr(uint8_t dev_num) {
+	return 13;
+}
+
+uint16_t get_out_cnt_with_descr(uint8_t dev_num) {
+	return 3;
+}
+
 void read_calculation_config(const uint8_t *ptr) {
 	// imitation read from flash
 	calc_total_cnt = 14;

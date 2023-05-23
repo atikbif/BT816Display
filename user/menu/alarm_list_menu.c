@@ -18,8 +18,8 @@
 const char check_flash_ok[] = "\x46\x4c\x41\x53\x48\x20\xd0\x9f\xd0\xa0\xd0\x9e\xd0\x92\xd0\x95\xd0\xa0\xd0\x95\xd0\x9d\xd0\x9e";
 const char check_flash_err[] = "\x46\x4c\x41\x53\x48\x20\xd0\x9e\xd0\xa8\xd0\x98\xd0\x91\xd0\x9a\xd0\x90";
 
-uint8_t down_sign = 0;
-uint8_t up_sign = 0;
+static uint8_t down_sign = 0;
+static uint8_t up_sign = 0;
 
 #define MAX_ALARM_MESSAGE_LENGTH	(64+1)
 static uint8_t alarm_text[MAX_ALARM_MESSAGE_LENGTH];
