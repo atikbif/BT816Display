@@ -69,6 +69,8 @@ void passwd_menu(uint16_t key) {
 
 	if(cmd==CLR_ALARM_LIST) {
 		bt816_cmd_text(290, 30, 3, 0, "\xd0\x96\xd0\xa3\xd0\xa0\xd0\x9d\xd0\x90\xd0\x9b\x20\xd0\xa2\xd0\xa0\xd0\x95\xd0\x92\xd0\x9e\xd0\x93");
+	}else if(cmd==CONFIG_ACCESS) {
+		bt816_cmd_text(290, 30, 3, 0,"\xd0\x9a\xd0\x9e\xd0\x9d\xd0\xa4\xd0\x98\xd0\x93\xd0\xa3\xd0\xa0\xd0\x90\xd0\xa6\xd0\x98\xd0\xaf");
 	}
 
 	switch(key) {
@@ -114,11 +116,16 @@ void passwd_menu(uint16_t key) {
 
 	if(pos>=sizeof(passwd)) {
 		if(check_tmp_passwd()) {
-			current_menu = MENU_MAIN;
+
 			if(cmd==CLR_ALARM_LIST) {
+				current_menu = MENU_MAIN;
 				clear_alarm_list();
-				cmd = 0;
+			}else if(cmd==CONFIG_ACCESS) {
+				current_menu = MENU_CONFIG;
+			}else {
+				current_menu = MENU_MAIN;
 			}
+			cmd = 0;
 		}else {
 			clear_tmp_password();
 		}
