@@ -12,6 +12,7 @@
 #include "keys.h"
 #include "menu_list.h"
 #include "password_menu.h"
+#include "set_time_menu.h"
 
 extern menu_list_t current_menu;
 
@@ -35,6 +36,9 @@ void config_menu(uint16_t key) {
 	switch(key) {
 		case KEY_LEFT:
 			current_menu = MENU_MAIN;
+			break;
+		case KEY_2:
+			current_menu = MENU_SET_TIME;
 			break;
 		case KEY_4:
 			set_passwd_cmd(PASSWORD_SET1);

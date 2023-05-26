@@ -20,6 +20,7 @@ extern cluster_info_data_type cluster_data;
 extern calc_config calc[MAX_CALC_CNT];
 extern uint16_t calc_total_cnt;
 extern uint8_t passwd[6];
+extern ertc_time_type dev_time;
 
 void read_config() {
 	const char appl_name[] = "test";
@@ -44,20 +45,19 @@ void read_config() {
 	//cluster_data.plc_type[3] = PC21_MC;
 	//cluster_data.plc_type[7] = PC21_2T;
 
-	for(uint8_t i=0;i<3;i++) {
-		alarm_info info;
-		info.alarm_id = CHECK_EXT_FLASH_OK;
-		info.time.date = 1;
-		info.time.month = 2;
-		info.time.year = 23;
-		info.time.hour=14;
-		info.time.min=27+i/60;
-		info.time.sec=i%60;
-		add_alarm(info);
-	}
 
-	//uint8_t passwd[6]={1,1,1,1,1,1};
-	//set_passwd_value(passwd);
+	ertc_calendar_get(&dev_time);
+
+	alarm_info info;
+	info.alarm_id = CHECK_EXT_FLASH_OK;
+	info.time.date = dev_time.day;
+	info.time.month = dev_time.month;
+	info.time.year = dev_time.year;
+	info.time.hour=dev_time.hour;
+	info.time.min=dev_time.min;
+	info.time.sec=dev_time.sec;
+	add_alarm(info);
+
 }
 
 uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf) {
