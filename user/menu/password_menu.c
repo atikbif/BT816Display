@@ -12,17 +12,21 @@
 #include "keys.h"
 #include "menu_list.h"
 #include "alarm_list_menu.h"
+#include <string.h>
+#include "at32f435_437_board.h"
 
 static uint16_t cmd = 0;
 
-static uint8_t passwd[6]={0,0,0,0,0,0};
+uint8_t passwd[6]={0,0,0,0,0,0};
 static uint8_t tmp_passwd[6] = {0,0,0,0,0,0};
+static uint8_t new_passwd[6] = {0,0,0,0,0,0};
 
 static uint8_t pos = 0;
 
 static uint8_t prev_key=0;
 
 extern menu_list_t current_menu;
+
 
 static uint8_t check_tmp_passwd() {
 	uint8_t res = 1;
@@ -40,6 +44,14 @@ static void clear_tmp_password() {
 
 void set_passwd_value(uint8_t *ptr) {
 	for(uint8_t i=0;i<sizeof(passwd);i++) passwd[i]=ptr[i];
+	pwc_battery_powered_domain_access(TRUE);
+	ertc_bpr_data_write(ERTC_DT2, 0x1234);
+	uint16_t val = ((uint16_t)passwd[0]<<8) | passwd[1];
+	ertc_bpr_data_write(ERTC_DT3, val);
+	val = ((uint16_t)passwd[2]<<8) | passwd[3];
+	ertc_bpr_data_write(ERTC_DT4, val);
+	val = ((uint16_t)passwd[4]<<8) | passwd[5];
+	ertc_bpr_data_write(ERTC_DT5, val);
 }
 
 void set_passwd_cmd(uint16_t value) {
@@ -71,6 +83,10 @@ void passwd_menu(uint16_t key) {
 		bt816_cmd_text(290, 30, 3, 0, "\xd0\x96\xd0\xa3\xd0\xa0\xd0\x9d\xd0\x90\xd0\x9b\x20\xd0\xa2\xd0\xa0\xd0\x95\xd0\x92\xd0\x9e\xd0\x93");
 	}else if(cmd==CONFIG_ACCESS) {
 		bt816_cmd_text(290, 30, 3, 0,"\xd0\x9a\xd0\x9e\xd0\x9d\xd0\xa4\xd0\x98\xd0\x93\xd0\xa3\xd0\xa0\xd0\x90\xd0\xa6\xd0\x98\xd0\xaf");
+	}else if(cmd==PASSWORD_SET1) {
+		bt816_cmd_text(230, 30, 3, 0,"\xd0\x92\xd0\x92\xd0\x95\xd0\x94\xd0\x98\xd0\xa2\xd0\x95\x20\xd0\x9d\xd0\x9e\xd0\x92\xd0\xab\xd0\x99\x20\xd0\x9f\xd0\x90\xd0\xa0\xd0\x9e\xd0\x9b\xd0\xac");
+	}else if(cmd==PASSWORD_SET2) {
+		bt816_cmd_text(230, 30, 3, 0,"\xd0\x9f\xd0\x9e\xd0\x94\xd0\xa2\xd0\x92\xd0\x95\xd0\xa0\xd0\x94\xd0\x98\xd0\xa2\xd0\x95\x20\xd0\x9f\xd0\x90\xd0\xa0\xd0\x9e\xd0\x9b\xd0\xac");
 	}
 
 	switch(key) {
@@ -115,19 +131,35 @@ void passwd_menu(uint16_t key) {
 	}
 
 	if(pos>=sizeof(passwd)) {
-		if(check_tmp_passwd()) {
-
-			if(cmd==CLR_ALARM_LIST) {
-				current_menu = MENU_MAIN;
-				clear_alarm_list();
-			}else if(cmd==CONFIG_ACCESS) {
+		if(cmd==PASSWORD_SET1) {
+			memcpy(new_passwd,tmp_passwd,sizeof(passwd));
+			cmd=PASSWORD_SET2;
+		}else if(cmd==PASSWORD_SET2){
+			uint8_t res = 1;
+			for(uint8_t i=0;i<sizeof(new_passwd);i++) {
+				if(new_passwd[i]!=tmp_passwd[i]) res=0;
+			}
+			if(res) {
+				// update password
+				set_passwd_value(new_passwd);
 				current_menu = MENU_CONFIG;
 			}else {
-				current_menu = MENU_MAIN;
+				cmd=PASSWORD_SET1;
 			}
-			cmd = 0;
 		}else {
-			clear_tmp_password();
+			if(check_tmp_passwd()) {
+				if(cmd==CLR_ALARM_LIST) {
+					current_menu = MENU_MAIN;
+					clear_alarm_list();
+				}else if(cmd==CONFIG_ACCESS) {
+					current_menu = MENU_CONFIG;
+				}else {
+					current_menu = MENU_MAIN;
+				}
+				cmd = 0;
+			}else {
+				clear_tmp_password();
+			}
 		}
 		pos = 0;
 	}

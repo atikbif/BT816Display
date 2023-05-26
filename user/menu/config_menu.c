@@ -11,6 +11,7 @@
 #include "ram_map.h"
 #include "keys.h"
 #include "menu_list.h"
+#include "password_menu.h"
 
 extern menu_list_t current_menu;
 
@@ -34,6 +35,10 @@ void config_menu(uint16_t key) {
 	switch(key) {
 		case KEY_LEFT:
 			current_menu = MENU_MAIN;
+			break;
+		case KEY_4:
+			set_passwd_cmd(PASSWORD_SET1);
+			current_menu = MENU_PASSWD;
 			break;
 	}
 }

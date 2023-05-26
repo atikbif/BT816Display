@@ -24,5 +24,6 @@ uint16_t get_out_cnt_with_descr(uint8_t dev_num);
 uint8_t get_out_description(uint8_t dev_num, uint8_t out_num, uint8_t *buf);
 uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf);
 uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf);
+void read_password();
 
 #endif /* INCLUDE_CONFIG_H_ */

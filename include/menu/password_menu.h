@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-enum PASSWD_CMD{CLR_ALARM_LIST=1, CONFIG_ACCESS};
+enum PASSWD_CMD{CLR_ALARM_LIST=1, CONFIG_ACCESS, PASSWORD_SET1, PASSWORD_SET2};
 
 void set_passwd_cmd(uint16_t value);
 void passwd_menu(uint16_t key);

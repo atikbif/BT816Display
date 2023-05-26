@@ -99,6 +99,8 @@ int main(void)
   init_cluster(&cl);
   init_cur_time();
 
+  read_password();
+
   /* enter critical */
   taskENTER_CRITICAL(); 
 

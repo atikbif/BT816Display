@@ -13,11 +13,13 @@
 #include "password_menu.h"
 #include "plc_data.h"
 #include <string.h>
+#include "at32f435_437_board.h"
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
 extern calc_config calc[MAX_CALC_CNT];
 extern uint16_t calc_total_cnt;
+extern uint8_t passwd[6];
 
 void read_config() {
 	const char appl_name[] = "test";
@@ -54,8 +56,8 @@ void read_config() {
 		add_alarm(info);
 	}
 
-	uint8_t passwd[6]={1,1,1,1,1,1};
-	set_passwd_value(passwd);
+	//uint8_t passwd[6]={1,1,1,1,1,1};
+	//set_passwd_value(passwd);
 }
 
 uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf) {
@@ -291,4 +293,23 @@ void read_calculation_config(const uint8_t *ptr) {
 		calc[i].result = 0;
 		calc[i].prec = PR1;
 	}
+}
+
+void read_password() {
+	if (ertc_bpr_data_read(ERTC_DT2) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT2, 0x1234);
+		ertc_bpr_data_write(ERTC_DT3, 0x0101);
+		ertc_bpr_data_write(ERTC_DT4, 0x0101);
+		ertc_bpr_data_write(ERTC_DT5, 0x0101);
+	}
+	uint16_t val  = ertc_bpr_data_read(ERTC_DT3);
+	passwd[0] = val >> 8;
+	passwd[1] = val & 0xFF;
+	val  = ertc_bpr_data_read(ERTC_DT4);
+	passwd[2] = val >> 8;
+	passwd[3] = val & 0xFF;
+	val  = ertc_bpr_data_read(ERTC_DT5);
+	passwd[4] = val >> 8;
+	passwd[5] = val & 0xFF;
 }
