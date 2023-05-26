@@ -100,3 +100,7 @@ void test_set_time_menu() {
 	init_time_menu();
 	current_menu = MENU_SET_TIME;
 }
+
+void test_sys_cfg_menu() {
+	current_menu = MENU_SYS_CFG;
+}

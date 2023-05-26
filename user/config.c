@@ -14,6 +14,8 @@
 #include "plc_data.h"
 #include <string.h>
 #include "at32f435_437_board.h"
+#include "var_link.h"
+#include "cluster_state.h"
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
@@ -21,6 +23,27 @@ extern calc_config calc[MAX_CALC_CNT];
 extern uint16_t calc_total_cnt;
 extern uint8_t passwd[6];
 extern ertc_time_type dev_time;
+
+extern cluster cl;
+
+#define MAN_VAR_CNT		15
+const char* man_var_names[MAN_VAR_CNT] = {
+		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x31",
+		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x32",
+		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x33",
+		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x34",
+		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x35",
+		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x31",
+		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x32",
+		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x33",
+		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x34",
+		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x35",
+		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x31",
+		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x32",
+		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x33",
+		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x34",
+		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x35"
+};
 
 void read_config() {
 	const char appl_name[] = "test";
@@ -312,4 +335,48 @@ void read_password() {
 	val  = ertc_bpr_data_read(ERTC_DT5);
 	passwd[4] = val >> 8;
 	passwd[5] = val & 0xFF;
+}
+
+uint8_t get_manage_var(uint16_t i, manage_var *var) {
+	uint8_t res = 0;
+	if(i<MAN_VAR_CNT) {
+		res = 1;
+		for(uint16_t j=0;j<40;j++) var->name[j] = 0;
+		for(uint16_t j=0;j<40;j++) {
+			if(j<strlen(man_var_names[i])) var->name[j] = man_var_names[i][j];
+		}
+		if(i<5) {
+			var->link_type = VAR_LINK_CL_REG;
+			var->link_index = i+10;
+			var->min = 0;
+			var->max = 15000;
+		}else if(i<10) {
+			var->link_type = VAR_LINK_CL_BIT;
+			var->link_index = i-5;
+			var->min = 0;
+			var->max = 1;
+		}else {
+			var->link_type = VAR_LINK_NET_BIT;
+			var->link_index = i-10;
+			var->min = 0;
+			var->max = 1;
+		}
+		var->var_cnt = MAN_VAR_CNT;
+		var->value = 0;
+		switch(var->link_type) {
+			case VAR_LINK_CL_REG:
+				if(var->link_index<CLUSTER_REGS_CNT) var->value = cl.cluster_regs[var->link_index];
+				break;
+			case VAR_LINK_NET_REG:
+				if(var->link_index<NET_REGS_CNT) var->value = cl.net_regs[var->link_index];
+				break;
+			case VAR_LINK_CL_BIT:
+				if(var->link_index<CLUST_BIT_CNT) var->value = cl.cluster_bits[var->link_index];
+				break;
+			case VAR_LINK_NET_BIT:
+				if(var->link_index<NET_BITS_CNT) var->value = cl.net_bits[var->link_index];
+				break;
+		}
+	}
+	return res;
 }

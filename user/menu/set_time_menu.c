@@ -247,7 +247,8 @@ void set_time_menu(uint16_t key) {
 
 	switch(key) {
 		case KEY_LEFT:
-			current_menu = MENU_MAIN;
+		case KEY_ENTER:
+			current_menu = MENU_CONFIG;
 			break;
 		case KEY_RIGHT:
 			pos_to_right();

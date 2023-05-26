@@ -37,6 +37,9 @@ void config_menu(uint16_t key) {
 		case KEY_LEFT:
 			current_menu = MENU_MAIN;
 			break;
+		case KEY_1:
+			current_menu = MENU_SYS_CFG;
+			break;
 		case KEY_2:
 			init_time_menu();
 			current_menu = MENU_SET_TIME;

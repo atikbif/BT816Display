@@ -29,7 +29,12 @@
 #include "global_bits_menu.h"
 #include "config_menu.h"
 #include "set_time_menu.h"
+#include "system_config_menu.h"
 #include "test_menu.h"
+#include "config.h"
+#include "system_config_menu.h"
+#include "edit_var_menu.h"
+#include "cluster_state.h"
 
 uint8_t mnemo_num = 0;
 extern uint16_t mnemo_cnt;
@@ -63,24 +68,7 @@ const uint8_t message_version[] = "\xd0\x92\xd0\xb5\xd1\x80\xd1\x81\xd0\xb8\xd1\
 
 #define HELP_STR_CNT	6
 
-#define MAN_VAR_CNT		15
-const char* man_var_names[MAN_VAR_CNT] = {
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x31",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x32",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x33",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x34",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x35",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x31",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x32",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x33",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x34",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x35",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x31",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x32",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x33",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x34",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x35"
-};
+
 
 const char* help_data[HELP_STR_CNT] = {
 		"\xd0\x92\xd0\xb5\xd1\x80\xd1\x81\xd0\xb8\xd1\x8f\x20\xd0\x9f\xd0\x9e\x20\x31\x2e\x30",
@@ -119,15 +107,7 @@ static void clust_regs_menu(uint16_t key);
 static void net_regs_menu(uint16_t key);
 static void edit_u16_menu(uint16_t key);
 
-typedef struct{
-	uint8_t name[40];
-	uint32_t min;
-	uint32_t max;
-	uint32_t value;
-	uint16_t link_type;
-	uint16_t link_index;
-	uint16_t var_cnt;
-}manage_var;
+
 
 manage_var edit_var;
 uint8_t u16var_text[6]="     ";
@@ -136,13 +116,15 @@ uint16_t var_x_pos = 0;
 const f_ptr screen[] = {
 	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,diagnostic_menu,
 	diagnostic_menu2,pc21_state_menu, cross_reference_menu, global_integers_menu, global_bits_menu,config_menu,
-	set_time_menu,
+	set_time_menu, system_confug_menu,edit_var_menu,
 	help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
 };
 
 menu_list_t current_menu = MENU_MAIN;
+
+extern cluster cl;
 
 void display_menu(uint16_t key) {
 	if(current_menu>MENU_LIMIT) current_menu = MENU_MAIN;
@@ -165,7 +147,7 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-	//test_set_time_menu();
+	//test_sys_cfg_menu();
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
@@ -296,50 +278,6 @@ void mnemo_menu(uint16_t key) {
 	}
 }
 
-static uint8_t get_manage_var(uint16_t i, manage_var *var) {
-	uint8_t res = 0;
-	if(i<MAN_VAR_CNT) {
-		res = 1;
-		for(uint16_t j=0;j<40;j++) var->name[j] = 0;
-		for(uint16_t j=0;j<40;j++) {
-			if(j<strlen(man_var_names[i])) var->name[j] = man_var_names[i][j];
-		}
-		if(i<5) {
-			var->link_type = VAR_LINK_CL_REG;
-			var->link_index = i+10;
-			var->min = 0;
-			var->max = 15000;
-		}else if(i<10) {
-			var->link_type = VAR_LINK_CL_BIT;
-			var->link_index = i-5;
-			var->min = 0;
-			var->max = 1;
-		}else {
-			var->link_type = VAR_LINK_NET_BIT;
-			var->link_index = i-10;
-			var->min = 0;
-			var->max = 1;
-		}
-		var->var_cnt = MAN_VAR_CNT;
-		var->value = 0;
-		switch(var->link_type) {
-			case VAR_LINK_CL_REG:
-				if(var->link_index<CLUSTER_REGS_CNT) var->value = plc_clust_regs[var->link_index];
-				break;
-			case VAR_LINK_NET_REG:
-				if(var->link_index<NET_REGS_CNT) var->value = plc_net_regs[var->link_index];
-				break;
-			case VAR_LINK_CL_BIT:
-				if(var->link_index<CLUST_BITS_CNT) var->value = plc_clust_bits[var->link_index];
-				break;
-			case VAR_LINK_NET_BIT:
-				if(var->link_index<NET_BITS_CNT) var->value = plc_net_bits[var->link_index];
-				break;
-		}
-	}
-	return res;
-}
-
 void write_var_to_plc(manage_var *var) {
 	if(plc_can_link==0) return;
 	if(var->value>var->max) var->value = var->max;
@@ -347,24 +285,28 @@ void write_var_to_plc(manage_var *var) {
 	switch(var->link_type) {
 		case VAR_LINK_CL_REG:
 			if(var->link_index<CLUSTER_REGS_CNT) {
+				cl.cluster_regs[var->link_index] = var->value;
 				plc_clust_regs[var->link_index] = var->value;
 				write_clust_reg(var->link_index, var->value);
 			}
 			break;
 		case VAR_LINK_NET_REG:
 			if(var->link_index<NET_REGS_CNT) {
+				cl.net_regs[var->link_index] = var->value;
 				plc_net_regs[var->link_index] = var->value;
 				write_net_reg(var->link_index, var->value);
 			}
 			break;
 		case VAR_LINK_CL_BIT:
 			if(var->link_index<CLUST_BITS_CNT) {
+				cl.cluster_bits[var->link_index] = var->value;
 				plc_clust_bits[var->link_index] = var->value;
 				write_clust_bit(var->link_index, var->value);
 			}
 			break;
 		case VAR_LINK_NET_BIT:
 			if(var->link_index<NET_BITS_CNT) {
+				cl.net_bits[var->link_index] = var->value;
 				plc_net_bits[var->link_index] = var->value;
 				write_net_bit(var->link_index, var->value);
 			}

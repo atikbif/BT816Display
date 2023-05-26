@@ -10,6 +10,16 @@
 
 #include <stdint.h>
 
+typedef struct{
+	uint8_t name[40];
+	uint32_t min;
+	uint32_t max;
+	uint32_t value;
+	uint16_t link_type;
+	uint16_t link_index;
+	uint16_t var_cnt;
+}manage_var;
+
 void read_config();
 uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf); // return length
 uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf);
@@ -25,5 +35,6 @@ uint8_t get_out_description(uint8_t dev_num, uint8_t out_num, uint8_t *buf);
 uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf);
 uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf);
 void read_password();
+uint8_t get_manage_var(uint16_t i, manage_var *var);
 
 #endif /* INCLUDE_CONFIG_H_ */
