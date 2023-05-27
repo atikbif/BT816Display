@@ -39,6 +39,7 @@
 #include "cluster_state.h"
 #include "cur_time.h"
 #include "config.h"
+#include "trend_data.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -98,6 +99,7 @@ int main(void)
 
   init_cluster(&cl);
   init_cur_time();
+  init_trends();
 
   read_password();
 

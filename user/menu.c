@@ -38,6 +38,7 @@
 #include "prog_menu.h"
 #include "trend_config_menu.h"
 #include "add_trend_menu.h"
+#include "trend_info_menu.h"
 
 uint8_t mnemo_num = 0;
 extern uint16_t mnemo_cnt;
@@ -120,6 +121,7 @@ const f_ptr screen[] = {
 	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,diagnostic_menu,
 	diagnostic_menu2,pc21_state_menu, cross_reference_menu, global_integers_menu, global_bits_menu,config_menu,
 	set_time_menu, system_confug_menu,edit_var_menu,prog_menu,trend_config_menu,add_trend_menu,
+	trend_info_menu,
 	help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
