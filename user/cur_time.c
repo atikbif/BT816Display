@@ -9,8 +9,6 @@
 #include "at32f435_437_board.h"
 #include "at32f435_437_clock.h"
 
-#define JD0               2451911         // дней до 01 янв 2001 ПН
-
 ertc_time_type dev_time;
 __IO uint16_t ertc_clk_div_a = 0;
 __IO uint16_t ertc_clk_div_b = 0;

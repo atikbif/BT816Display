@@ -239,22 +239,6 @@ void edit_trend_menu(uint16_t key) {
 				bt816_cmd_text_var(70, 100+i*30, 2, OPT_FORMAT, "\xd0\xa2\xd1\x80\xd0\xb5\xd0\xbd\xd0\xb4\x20%d", 1, &v);
 			}
 
-//			trend * ptr = get_trend_by_num(cur_trend+1);
-//			if(ptr) {
-//				v = ptr->dev_addr;
-//				bt816_cmd_text_var(400, 95, 1, OPT_FORMAT, "\xd0\xa3\xd0\xb7\xd0\xb5\xd0\xbb\x20%d", 1, &v);
-//				v = ptr->inp_num;
-//				bt816_cmd_text_var(400, 145, 1, OPT_FORMAT, "\xd0\x92\xd0\xb2\xd0\xbe\xd0\xb4\x20%d", 1, &v);
-//				v = ptr->max_alarm;
-//				bt816_cmd_text_var(400, 195, 1, OPT_FORMAT, "HA %d", 1, &v);
-//				v = ptr->max_warn;
-//				bt816_cmd_text_var(400, 245, 1, OPT_FORMAT, "HW %d", 1, &v);
-//				v = ptr->min_alarm;
-//				bt816_cmd_text_var(400, 295, 1, OPT_FORMAT, "LA %d", 1, &v);
-//				v = ptr->min_warn;
-//				bt816_cmd_text_var(400, 345, 1, OPT_FORMAT, "LW %d", 1, &v);
-//			}
-
 			bt816_cmd_dl(DL_COLOR_RGB | WHITE);
 			bt816_cmd_dl(DL_END);
 

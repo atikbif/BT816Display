@@ -11,6 +11,8 @@
 #include <stdint.h>
 #include "cluster_state.h"
 
+#define JD0               2451911         // дней до 01 янв 2001 ПН
+
 void init_cur_time();
 uint32_t time_to_uint32();
 void time_from_uint32(uint32_t value);

@@ -41,6 +41,7 @@
 #include "trend_info_menu.h"
 #include "delete_trend_menu.h"
 #include "edit_trend_menu.h"
+#include "draw_trend_menu.h"
 
 uint8_t mnemo_num = 0;
 extern uint16_t mnemo_cnt;
@@ -123,7 +124,7 @@ const f_ptr screen[] = {
 	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,diagnostic_menu,
 	diagnostic_menu2,pc21_state_menu, cross_reference_menu, global_integers_menu, global_bits_menu,config_menu,
 	set_time_menu, system_confug_menu,edit_var_menu,prog_menu,trend_config_menu,add_trend_menu,
-	trend_info_menu,delete_trend_info_menu,edit_trend_menu,
+	trend_info_menu,delete_trend_info_menu,edit_trend_menu,draw_trend_menu,
 	help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
 	edit_u16_menu
@@ -154,7 +155,7 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-	test_add_trend_menu();
+	//test_add_trend_menu();
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
@@ -177,6 +178,8 @@ void main_menu(uint16_t key) {
 			current_menu = MENU_PASSWD;
 			break;
 		case KEY_6:
+			init_draw_trend_menu();
+			current_menu = MENU_DRAW_TREND;
 			break;
 		case KEY_7:
 			current_menu = MENU_MNEMO;

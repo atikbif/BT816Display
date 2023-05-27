@@ -8,6 +8,10 @@
 #include "trend_data.h"
 #include "at32f435_437_board.h"
 #include "cluster_state.h"
+#include <math.h>
+#include "cur_time.h"
+
+#define TREND_TEST_MODE	0
 
 
 static trend trends[TREND_MAX_CNT];
@@ -15,6 +19,7 @@ uint8_t tr_cnt = 0;
 
 trend get_new_trend() {
 	trend tr;
+	static float angle = 0;
 	tr.dev_addr = 1;
 	tr.first_point = 0;
 	tr.cur_point = 0;
@@ -25,8 +30,18 @@ trend get_new_trend() {
 	tr.min_warn = 0;
 	tr.full_flag = 0;
 	for(int i=0;i<TREND_SIZE;i++) {
+
+#if TREND_TEST_MODE
+		uint32_t time_point = time_to_uint32();
+		float v = sin(angle)*255;
+		angle+=0.07;
+		if(v<0) v = v*(-1);
+		tr.point[i].data = v;
+		tr.point[i].time = time_point+i;
+#else
 		tr.point[i].data = 0;
-		tr.point[i].time = 0;
+		tr.point[i].time = 0xFFFFFFFF;
+#endif
 	}
 	return tr;
 }
