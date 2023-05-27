@@ -233,10 +233,6 @@ void set_time_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-
-	bt816_cmd_setfont2(3,MEM_FONT30,0);
-	bt816_cmd_setfont2(2,MEM_FONT22,0);
-
 	bt816_cmd_dl(DL_COLOR_RGB | WHITE);
 	bt816_cmd_dl(DL_END);
 

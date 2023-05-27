@@ -17,6 +17,7 @@
 #include "global_integers_menu.h"
 #include "global_bits_menu.h"
 #include "set_time_menu.h"
+#include "add_trend_menu.h"
 #include "menu_list.h"
 #include <string.h>
 
@@ -103,4 +104,9 @@ void test_set_time_menu() {
 
 void test_sys_cfg_menu() {
 	current_menu = MENU_SYS_CFG;
+}
+
+void test_add_trend_menu() {
+	init_add_trend_menu();
+	current_menu = MENU_ADD_TREND;
 }

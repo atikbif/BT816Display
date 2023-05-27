@@ -13,6 +13,7 @@
 #include "menu_list.h"
 #include "config.h"
 #include <string.h>
+#include "add_trend_menu.h"
 
 extern menu_list_t current_menu;
 
@@ -38,6 +39,8 @@ void trend_config_menu(uint16_t key) {
 		case KEY_1:
 			break;
 		case KEY_2:
+			init_add_trend_menu();
+			current_menu = MENU_ADD_TREND;
 			break;
 		case KEY_3:
 			break;

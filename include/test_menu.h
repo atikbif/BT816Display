@@ -19,5 +19,6 @@ void test_glob_integers_menu();
 void test_glob_bits_menu();
 void test_set_time_menu();
 void test_sys_cfg_menu();
+void test_add_trend_menu();
 
 #endif /* INCLUDE_TEST_MENU_H_ */
