@@ -13,6 +13,8 @@ ertc_time_type dev_time;
 __IO uint16_t ertc_clk_div_a = 0;
 __IO uint16_t ertc_clk_div_b = 0;
 
+uint32_t cur_long_time = 0;
+
 void init_cur_time() {
 	crm_periph_clock_enable(CRM_PWC_PERIPH_CLOCK, TRUE);
 	pwc_battery_powered_domain_access(TRUE);

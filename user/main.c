@@ -56,6 +56,8 @@ extern uint8_t plc_can_link;
 extern uint8_t get_io_names_flag;
 extern cluster cl;
 
+extern uint32_t cur_long_time;
+
 extern void tcpip_stack_init(void);
 extern void udpecho_init(void);
 extern void tcpecho_init(void);
@@ -171,10 +173,11 @@ void network_task_function(void *pvParameters)
 	while(1)
 	{
 		cnt++;
-		if(cnt%1000==0) {
+		if(cnt%900==0) {
 			//imitate_plc_data();
 			at32_led_toggle(LED_POW);
 			send_heartbeat();
+			cur_long_time = time_to_uint32();
 		}
 		if(get_io_names_flag) {
 			// send can request

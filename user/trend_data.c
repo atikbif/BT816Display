@@ -13,6 +13,7 @@
 
 #define TREND_TEST_MODE	0
 
+extern uint32_t cur_long_time;
 
 static trend trends[TREND_MAX_CNT];
 uint8_t tr_cnt = 0;
@@ -20,7 +21,7 @@ uint8_t tr_cnt = 0;
 trend get_new_trend() {
 	trend tr;
 	static float angle = 0;
-	tr.dev_addr = 1;
+	tr.dev_addr = 128;
 	tr.first_point = 0;
 	tr.cur_point = 0;
 	tr.inp_num = 1;
@@ -190,5 +191,17 @@ void save_trends() {
 	val = val << 8;
 	val |= trends[2].max_alarm;
 	ertc_bpr_data_write(ERTC_DT16, val); // max warning and max alarm
+}
+
+uint8_t check_and_add_data_to_trend_from_can(uint8_t node_addr, uint8_t inp_num, uint8_t value) {
+	for(int i=0;i<TREND_MAX_CNT;i++) {
+		if((trends[i].dev_addr==node_addr) && (trends[i].inp_num = inp_num)) {
+			trend_point p;
+			p.data = value;
+			p.time = cur_long_time;
+			add_data_to_trend(&trends[i], p);
+		}
+	}
+	return 0;
 }
 
