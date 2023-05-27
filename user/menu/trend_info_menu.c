@@ -47,16 +47,17 @@ void trend_info_menu(uint16_t key) {
 	if(tr_cnt==0) {
 		bt816_cmd_text(300,200,2,0,"\xd0\x94\xd0\xbe\xd0\xb1\xd0\xb0\xd0\xb2\xd1\x8c\xd1\x82\xd0\xb5\x20\xd1\x82\xd1\x80\xd0\xb5\xd0\xbd\xd0\xb4");
 	}else {
-		for(uint16_t i=0;i<tr_cnt;i++) {
-			if(i==cur_trend) {
-				bt816_cmd_fgcolor(COLOR_RGB(100, 100, 130));
-				bt816_cmd_button(60, 100+i*30, 120, 32, 2, 0, "");
-			}
-			manage_var var;
-			uint32_t v = i+1;
-			bt816_cmd_text_var(70, 100+i*30, 2, OPT_FORMAT, "\xd0\xa2\xd1\x80\xd0\xb5\xd0\xbd\xd0\xb4\x20%d", 1, &v);
 
-			trend * ptr = get_trend_by_num(i+1);
+			bt816_cmd_fgcolor(COLOR_RGB(100, 100, 130));
+			bt816_cmd_button(60, 100+cur_trend*30, 120, 32, 2, 0, "");
+
+			uint32_t v = 0;
+			for(int i=0;i<tr_cnt;i++) {
+				v = i+1;
+				bt816_cmd_text_var(70, 100+i*30, 2, OPT_FORMAT, "\xd0\xa2\xd1\x80\xd0\xb5\xd0\xbd\xd0\xb4\x20%d", 1, &v);
+			}
+
+			trend * ptr = get_trend_by_num(cur_trend+1);
 			if(ptr) {
 				v = ptr->dev_addr;
 				bt816_cmd_text_var(400, 95, 1, OPT_FORMAT, "\xd0\xa3\xd0\xb7\xd0\xb5\xd0\xbb\x20%d", 1, &v);
@@ -71,8 +72,6 @@ void trend_info_menu(uint16_t key) {
 				v = ptr->min_warn;
 				bt816_cmd_text_var(400, 345, 1, OPT_FORMAT, "LW %d", 1, &v);
 			}
-
-		}
 	}
 
 	bt816_cmd_dl(DL_DISPLAY);
