@@ -9,7 +9,6 @@
 #include "at32f435_437_board.h"
 #include "cluster_state.h"
 
-#define TREND_MAX_CNT	3
 
 static trend trends[TREND_MAX_CNT];
 uint8_t tr_cnt = 0;

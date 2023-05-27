@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #define TREND_SIZE		64
+#define TREND_MAX_CNT	3
 
 typedef struct {
 	uint8_t data;

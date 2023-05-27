@@ -16,6 +16,7 @@
 #include "add_trend_menu.h"
 #include "trend_info_menu.h"
 #include "delete_trend_menu.h"
+#include "edit_trend_menu.h"
 
 extern menu_list_t current_menu;
 
@@ -47,6 +48,8 @@ void trend_config_menu(uint16_t key) {
 			current_menu = MENU_ADD_TREND;
 			break;
 		case KEY_3:
+			init_edit_trend_menu();
+			current_menu = MENU_EDIT_TREND;
 			break;
 		case KEY_4:
 			init_delete_trend_info_menu();
