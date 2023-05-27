@@ -89,7 +89,7 @@ void system_confug_menu(uint16_t key) {
 			}
 			break;
 		case KEY_LEFT:
-			current_menu = MENU_MAIN;
+			current_menu = MENU_CONFIG;
 			break;
 		case KEY_RIGHT:
 		case KEY_ENTER:
