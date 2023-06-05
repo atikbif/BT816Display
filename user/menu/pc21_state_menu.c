@@ -80,8 +80,11 @@ void pc21_state_menu(uint16_t key) {
 	bt816_cmd_text(45, 65, 2, 0, "ID:");
 	bt816_cmd_number(85, 65, 2, 0, cl.pc21.app_id);
 
-	bt816_cmd_text(115, 65, 2, 0, "ETHIP:");
-	bt816_cmd_number(195, 65, 2, 0, cl.pc21.ethip_state);
+	bt816_cmd_text(450, 37, 2, 0, "ETHIP:");
+	bt816_cmd_number(530, 37, 2, 0, cl.pc21.ethip_state);
+
+	bt816_cmd_text(450, 65, 2, 0, "HEART:");
+	bt816_cmd_number(530, 65, 2, 0, cl.pc21.heartbeat);
 
 	if(plc_can_link) {
 		bt816_cmd_dl(DL_COLOR_RGB | GREEN);

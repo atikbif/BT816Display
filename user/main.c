@@ -40,6 +40,7 @@
 #include "cur_time.h"
 #include "config.h"
 #include "trend_data.h"
+#include "cluster_state_menu.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -57,6 +58,7 @@ extern uint8_t get_io_names_flag;
 extern cluster cl;
 
 extern uint32_t cur_long_time;
+extern cluster_info_data_type cluster_data;
 
 extern void tcpip_stack_init(void);
 extern void udpecho_init(void);
@@ -201,6 +203,7 @@ void network_task_function(void *pvParameters)
 		if(hb_cnt>=3000) {
 			hb_cnt = 0;
 			plc_can_link = 0;
+			cluster_data.plc_link[0] = 0;
 		}
 		//at32_led_toggle(LED_POW);
 		vTaskDelay(1);

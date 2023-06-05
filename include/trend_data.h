@@ -40,5 +40,6 @@ void delete_trend(uint8_t trend_num);
 uint8_t get_trend_max_cnt();
 trend* get_trend_by_num(uint8_t num);
 void save_trends();
+uint8_t check_and_add_data_to_trend_from_can(uint8_t node_addr, uint8_t inp_num, uint8_t value);
 
 #endif /* INCLUDE_TREND_DATA_H_ */

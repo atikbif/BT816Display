@@ -10,6 +10,8 @@
 #include <string.h>
 #include "plc_data.h"
 #include "cluster_state.h"
+#include "cluster_state_menu.h"
+#include "trend_data.h"
 
 extern cluster cl;
 
@@ -50,6 +52,8 @@ static uint8_t packed_fault = 0;
 static uint8_t packed_mask = 0;
 
 uint8_t get_io_names_flag = 0;
+
+extern cluster_info_data_type cluster_data;
 
 
 struct can_packet_id {
@@ -116,6 +120,7 @@ void check_can_rx_data(can_rx_message_type *rx) {
 			plc_can_link = 1;
 			plc_can_addr = can_id->node_addr;
 			cluster_addr = can_id->clust_addr;
+			if((cluster_addr==0)&&(plc_can_addr<=7)) cluster_data.plc_link[plc_can_addr]=1;
 			cl.pc21.heartbeat = intern_addr;
 		}else /*if(can_id->srv==SRV_Event)*/ {
 			switch(eoid) {
@@ -190,6 +195,7 @@ void check_can_rx_data(can_rx_message_type *rx) {
 					cl.pc21.ain[intern_addr-1].fault = ((uint16_t)rx_packet.data[5]<<8)|rx_packet.data[4];
 					cl.pc21.ain[intern_addr-1].tdu = rx_packet.data[3];
 					cl.pc21.ain[intern_addr-1].value = rx_packet.data[2];
+					check_and_add_data_to_trend_from_can(can_id->node_addr, intern_addr, cl.pc21.ain[intern_addr-1].value);
 				}
 				break;
 			case 0x06:

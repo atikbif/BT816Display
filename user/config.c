@@ -309,8 +309,8 @@ void read_calculation_config(const uint8_t *ptr) {
 	// imitation read from flash
 	calc_total_cnt = 14;
 	for(uint16_t i=0;i<calc_total_cnt;i++) {
-		calc[i].k = 2.5;
-		calc[i].b = 10;
+		calc[i].k = 1.0;
+		calc[i].b = 0;
 		calc[i].link = LINK_RAW;
 		calc[i].index = i;
 		calc[i].result = 0;

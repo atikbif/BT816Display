@@ -29,7 +29,7 @@ static uint16_t get_trend_data_cnt(uint8_t num) {
 	if(ptr) {
 		int pos = ptr->first_point;
 
-		for(int i=0;i<TREND_SIZE;i++) {
+		for(int i=0;i<TREND_SIZE-1;i++) {
 			if(ptr->point[pos].time!=0xFFFFFFFF) {
 				cnt++;
 				pos++;
@@ -97,6 +97,7 @@ static uint8_t get_trend_max(uint8_t num) {
 			pos++;
 			if(pos>=TREND_SIZE) pos = 0;
 		}
+		if(value<=250) value+=5;
 		return value;
 	}
 	return 0;
@@ -178,7 +179,7 @@ static void draw_trend(uint8_t num) {
 	if(max_time<=min_time) max_time = min_time+1;
 
 	draw_time(30,440,22,min_time);
-	draw_time(640,440,22,min_time);
+	draw_time(640,440,22,max_time);
 
 	min_val = get_trend_min(num);
 	max_val = get_trend_max(num);
@@ -233,9 +234,15 @@ static void draw_trend(uint8_t num) {
 			if(pos>=TREND_SIZE) pos = 0;
 		}
 		bt816_cmd_dl(DL_BEGIN | BT816_LINE_STRIP);
+		uint16_t prev_value = 0;
 		for(int i=0;i<cnt;i++) {
+			if(i) {
+				bt816_cmd_dl(VERTEX2F((95+get_point_time_pos(point_buf[i].time, min_time, max_time)*6)*16,
+									prev_value));
+			}
 			bt816_cmd_dl(VERTEX2F((95+get_point_time_pos(point_buf[i].time, min_time, max_time)*6)*16,
 					(400-get_point_value_pos(point_buf[i].data, min_val, max_val)*3)*16));
+			prev_value = (400-get_point_value_pos(point_buf[i].data, min_val, max_val)*3)*16;
 		}
 		bt816_cmd_dl(DL_END);
 	}

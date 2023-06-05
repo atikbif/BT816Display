@@ -21,7 +21,7 @@ uint8_t tr_cnt = 0;
 trend get_new_trend() {
 	trend tr;
 	static float angle = 0;
-	tr.dev_addr = 128;
+	tr.dev_addr = 0;
 	tr.first_point = 0;
 	tr.cur_point = 0;
 	tr.inp_num = 1;
@@ -195,7 +195,7 @@ void save_trends() {
 
 uint8_t check_and_add_data_to_trend_from_can(uint8_t node_addr, uint8_t inp_num, uint8_t value) {
 	for(int i=0;i<TREND_MAX_CNT;i++) {
-		if((trends[i].dev_addr==node_addr) && (trends[i].inp_num = inp_num)) {
+		if((trends[i].dev_addr==node_addr) && (trends[i].inp_num == inp_num)) {
 			trend_point p;
 			p.data = value;
 			p.time = cur_long_time;

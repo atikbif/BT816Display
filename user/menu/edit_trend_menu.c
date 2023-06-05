@@ -261,6 +261,10 @@ void edit_trend_menu(uint16_t key) {
 			case KEY_ENTER:
 				for(int i=0;i<TREND_MAX_CNT;i++) {
 					*get_trend_by_num(i+1) = tmp_trends[i];
+					for(int j=0;j<TREND_SIZE;j++) {
+						tmp_trends[i].point[j].data = 0;
+						tmp_trends[i].point[j].time = 0xFFFFFFFF;
+					}
 				}
 				save_trends();
 				current_menu = MENU_TREND_CONF;
