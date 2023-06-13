@@ -93,19 +93,7 @@ int main(void)
   rs485_1_send_data("Start\r\n",7);
   rs485_2_send_data("Start\r\n",7);
 
-  init_backlight();
-  bt816_spi_init();
 
-  init_plc_data();
-  read_calculation_config(0);
-
-  can1_init();
-
-  init_cluster(&cl);
-  init_cur_time();
-  init_trends();
-
-  read_password();
 
   /* enter critical */
   taskENTER_CRITICAL(); 

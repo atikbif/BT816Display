@@ -16,12 +16,34 @@
 #include "menu.h"
 #include "config.h"
 
+#include "plc_data.h"
+#include "can.h"
+#include "cluster_state.h"
+#include "cur_time.h"
+#include "trend_data.h"
+#include "cluster_state_menu.h"
+#include "bt816_spi.h"
+
+extern cluster cl;
+
 void lcd_task_function(void *pvParameters)
 {
 	uint16_t prev_key = 0;
 	uint16_t key_cmd = 0;
 	uint16_t tmr = 0;
 	uint8_t mnemo_num = 0;
+	vTaskDelay(2000);
+
+	init_backlight();
+	bt816_spi_init();
+	init_plc_data();
+	read_calculation_config(0);
+	can1_init();
+	init_cluster(&cl);
+	init_cur_time();
+	init_trends();
+	read_password();
+
 	bt816_init();
 	read_config();
 	init_display_fonts();
