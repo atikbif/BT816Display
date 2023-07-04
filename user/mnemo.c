@@ -29,6 +29,8 @@ uint16_t mnemo_cnt = 0;
 #define MNEMO_ID_TEXT_VAR			7
 #define MNEMO_ID_NUMBER				8
 #define MNEMO_ID_PROGR				9
+#define MNEMO_ID_FILLED_RECT		10
+#define MNEMO_ID_FILLED_CIRCLE		11
 
 #define MNEMO_HEADER_LENGTH			4
 #define MNEMO_ONE_ELEM_LINK_WIDTH	2

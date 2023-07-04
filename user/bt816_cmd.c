@@ -1601,9 +1601,9 @@ uint8_t bt816_init() {
 	uint8_t chip_id = 0;
 	uint16_t cpu_reset = 0;
 	uint16_t timeout = 0;
-	bt816_power_down_on();
 	vTaskDelay(50); /* minimum time for power-down is 5ms */
 	bt816_power_down_off();
+	vTaskDelay(100);
 	vTaskDelay(21);
 	bt816_cmd_send(0x44,0x00); // clk ext
 	bt816_cmd_send(0x61,0x46); // set clock to 72 MHz
