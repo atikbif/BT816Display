@@ -14,6 +14,8 @@
 #include "ram_map.h"
 #include "plc_data.h"
 #include "var_link.h"
+#include "config.h"
+#include "cluster_state.h"
 
 uint16_t mnemo_cnt = 0;
 
@@ -32,7 +34,7 @@ uint16_t mnemo_cnt = 0;
 #define MNEMO_ID_FILLED_RECT		10
 #define MNEMO_ID_FILLED_CIRCLE		11
 
-#define MNEMO_HEADER_LENGTH			4
+#define MNEMO_HEADER_LENGTH			10
 #define MNEMO_ONE_ELEM_LINK_WIDTH	2
 
 extern enum DI_STATE plc_di_state[DI_CNT];
@@ -47,6 +49,8 @@ extern uint16_t plc_net_regs[NET_REGS_CNT];
 extern calc_config calc[MAX_CALC_CNT];
 
 extern uint8_t plc_can_link;
+
+extern cluster cl;
 
 #define XPOS_MAX	800
 #define YPOS_MAX	480
@@ -123,6 +127,7 @@ const uint8_t mnemo2_data[] = {
 };
 
 uint8_t mnemo_buf[4096];
+static uint8_t conf_buf[4096];
 
 static void mnemo_draw_lamp_image(uint16_t x, uint16_t y, enum LAMP_COL col);
 
@@ -131,22 +136,42 @@ static void mnemo_draw_background_image(const uint8_t *ptr);
 static void mnemo_draw_lamp(const uint8_t *ptr);
 static void mnemo_draw_text(const uint8_t *ptr);
 static void mnemo_draw_background_col(const uint8_t *ptr);
+static void mnemo_draw_filled_rect(const uint8_t *ptr);
+static void mnemo_draw_filled_circle(const uint8_t *ptr);
 
 
 uint8_t read_mnemo_data(uint16_t mnemo_num) {
-	if(mnemo_num==0) {
-		for(uint16_t i=0;i<sizeof(mnemo1_data);i++) mnemo_buf[i] = mnemo1_data[i];
-		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
-			// check crc
-			return 1;
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	//vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(14,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
 		}
-	}else if(mnemo_num==1) {
-		for(uint16_t i=0;i<sizeof(mnemo2_data);i++) mnemo_buf[i] = mnemo2_data[i];
-		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
-			// check crc
+		if(check_item_config(conf_buf, 14)) {
+			for(uint16_t i=0;i<sizeof(conf_buf);i++) mnemo_buf[i] = conf_buf[i];
 			return 1;
 		}
 	}
+//	if(mnemo_num==0) {
+//		for(uint16_t i=0;i<sizeof(mnemo1_data);i++) mnemo_buf[i] = mnemo1_data[i];
+//		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
+//			// check crc
+//			return 1;
+//		}
+//	}else if(mnemo_num==1) {
+//		for(uint16_t i=0;i<sizeof(mnemo2_data);i++) mnemo_buf[i] = mnemo2_data[i];
+//		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
+//			// check crc
+//			return 1;
+//		}
+//	}
 	return 0;
 }
 
@@ -163,6 +188,130 @@ void mnemo_draw_background_col(const uint8_t *ptr) {
 		col |= blue_val;
 		bt816_cmd_dl(col);
 	}
+}
+
+void mnemo_draw_filled_rect(const uint8_t *ptr) {
+	const uint16_t data_offset = 3;
+	uint16_t x_pos = ((uint16_t)ptr[data_offset]<<8)|ptr[data_offset+1];
+	uint16_t y_pos = ((uint16_t)ptr[data_offset+2]<<8)|ptr[data_offset+3];
+	uint16_t width = ((uint16_t)ptr[data_offset+4]<<8)|ptr[data_offset+5];
+	uint16_t height = ((uint16_t)ptr[data_offset+6]<<8)|ptr[data_offset+7];
+	uint8_t red_on_color = ptr[data_offset+8];
+	uint8_t green_on_color = ptr[data_offset+9];
+	uint8_t blue_on_color = ptr[data_offset+10];
+	uint8_t red_off_color = ptr[data_offset+11];
+	uint8_t green_off_color = ptr[data_offset+12];
+	uint8_t blue_off_color = ptr[data_offset+13];
+	uint16_t link_type = ((uint16_t)ptr[data_offset+14]<<8)|ptr[data_offset+15];
+	uint16_t link_index = ((uint16_t)ptr[data_offset+16]<<8)|ptr[data_offset+17];
+
+	uint8_t value = 0;
+	switch(link_type) {
+		case 0:	// DI
+			if(link_index<PC21_INP_CNT) {
+				value = cl.pc21.din[link_index].state;
+			}
+			break;
+		case 1:	// DO
+			if(link_index<PC21_OUT_CNT) {
+				value = cl.pc21.dout[link_index].state;
+			}
+			break;
+		case 2:	// cluster bit
+			if(link_index<CLUST_BIT_CNT) {
+				value = cl.cluster_bits[link_index];
+			}
+			break;
+		case 3: // net bit
+			if(link_index<NET_BITS_CNT) {
+				value = cl.net_bits[link_index];
+			}
+			break;
+	}
+	uint32_t cur_color = 0x00;
+
+	if(value) {
+		cur_color = red_on_color;
+		cur_color = cur_color << 8;
+		cur_color |= green_on_color;
+		cur_color = cur_color << 8;
+		cur_color |= blue_on_color;
+	}else {
+		cur_color = red_off_color;
+		cur_color = cur_color << 8;
+		cur_color |= green_off_color;
+		cur_color = cur_color << 8;
+		cur_color |= blue_off_color;
+	}
+
+	bt816_cmd_dl(DL_COLOR_RGB | cur_color);
+	bt816_cmd_dl(DL_END);
+
+	bt816_cmd_dl(DL_BEGIN | BT816_RECTS);
+	bt816_cmd_dl(VERTEX2F(x_pos*16, y_pos*16));
+	bt816_cmd_dl(VERTEX2F((x_pos+width)*16, (y_pos+height)*16));
+	bt816_cmd_dl(DL_END);
+}
+
+void mnemo_draw_filled_circle(const uint8_t *ptr) {
+	const uint16_t data_offset = 3;
+	uint16_t x_pos = ((uint16_t)ptr[data_offset]<<8)|ptr[data_offset+1];
+	uint16_t y_pos = ((uint16_t)ptr[data_offset+2]<<8)|ptr[data_offset+3];
+	uint16_t width = ((uint16_t)ptr[data_offset+4]<<8)|ptr[data_offset+5];
+
+	uint8_t red_on_color = ptr[data_offset+6];
+	uint8_t green_on_color = ptr[data_offset+7];
+	uint8_t blue_on_color = ptr[data_offset+8];
+	uint8_t red_off_color = ptr[data_offset+9];
+	uint8_t green_off_color = ptr[data_offset+10];
+	uint8_t blue_off_color = ptr[data_offset+11];
+	uint16_t link_type = ((uint16_t)ptr[data_offset+12]<<8)|ptr[data_offset+13];
+	uint16_t link_index = ((uint16_t)ptr[data_offset+14]<<8)|ptr[data_offset+15];
+
+	uint8_t value = 0;
+	switch(link_type) {
+		case 0:	// DI
+			if(link_index<PC21_INP_CNT) {
+				value = cl.pc21.din[link_index].state;
+			}
+			break;
+		case 1:	// DO
+			if(link_index<PC21_OUT_CNT) {
+				value = cl.pc21.dout[link_index].state;
+			}
+			break;
+		case 2:	// cluster bit
+			if(link_index<CLUST_BIT_CNT) {
+				value = cl.cluster_bits[link_index];
+			}
+			break;
+		case 3: // net bit
+			if(link_index<NET_BITS_CNT) {
+				value = cl.net_bits[link_index];
+			}
+			break;
+	}
+	uint32_t cur_color = 0x00;
+
+	if(value) {
+		cur_color = red_on_color;
+		cur_color = cur_color << 8;
+		cur_color |= green_on_color;
+		cur_color = cur_color << 8;
+		cur_color |= blue_on_color;
+	}else {
+		cur_color = red_off_color;
+		cur_color = cur_color << 8;
+		cur_color |= green_off_color;
+		cur_color = cur_color << 8;
+		cur_color |= blue_off_color;
+	}
+
+	bt816_cmd_dl(DL_COLOR_RGB | cur_color);
+	bt816_cmd_dl( POINT_SIZE(width * 8) );
+	bt816_cmd_dl(DL_BEGIN | BT816_POINTS);
+	bt816_cmd_dl( VERTEX2F(x_pos*16 + width*8, y_pos*16+width*8) );
+	bt816_cmd_dl(DL_END);
 }
 
 void mnemo_draw_text(const uint8_t *ptr) {
@@ -399,19 +548,18 @@ void mnemo_draw_gauge(const uint8_t *ptr) {
 }
 
 void mnemo_draw_background_image(const uint8_t *ptr) {
-	uint16_t id = ((uint16_t)ptr[0]<<8)|ptr[1];
-	if(id==MNEMO_ID_BACKGROUND_IMAGE) {
-		uint8_t version = ptr[2];
-		uint32_t addr = ptr[3];
-		addr = addr<<8;addr|=ptr[4];
-		addr = addr<<8;addr|=ptr[5];
-		addr = addr<<8;addr|=ptr[6];
+	uint16_t data_offset = 3;
+	uint32_t addr = ptr[data_offset++];
+	addr = addr<<8;addr|=ptr[data_offset++];
+	addr = addr<<8;addr|=ptr[data_offset++];
+	addr = addr<<8;addr|=ptr[data_offset++];
 
-		bt816_cmd_setbitmap(0x800000 | (addr/32), BT816_COMPRESSED_RGBA_ASTC_10x10_KHR, 800, 480);
-		bt816_cmd_dl(DL_BEGIN | BT816_BITMAPS);
-		bt816_cmd_dl(VERTEX2F(0, 0));
-		bt816_cmd_dl(DL_END);
-	}
+	addr+=4096 + 4096;
+
+	bt816_cmd_setbitmap(0x800000 | (addr/32), BT816_COMPRESSED_RGBA_ASTC_10x10_KHR, 800, 480);
+	bt816_cmd_dl(DL_BEGIN | BT816_BITMAPS);
+	bt816_cmd_dl(VERTEX2F(0, 0));
+	bt816_cmd_dl(DL_END);
 }
 
 void mnemo_draw_lamp(const uint8_t *ptr) {
@@ -451,7 +599,8 @@ uint16_t mnemo_read_cnt_from_config(uint32_t conf_addr) {
 }
 
 static uint16_t mnemo_get_elements_cnt() {
-	uint16_t res = ((uint16_t)mnemo_buf[2]<<8)|mnemo_buf[3];
+	const uint16_t ofsset = 8;
+	uint16_t res = ((uint16_t)mnemo_buf[ofsset]<<8)|mnemo_buf[ofsset+1];
 	return res;
 }
 
@@ -487,32 +636,38 @@ void mnemo_draw_lamp_image(uint16_t x, uint16_t y, enum LAMP_COL col) {
 void mnemo_draw_element(uint16_t conf_addr) {
 	uint16_t id = ((uint16_t)mnemo_buf[conf_addr]<<8)|mnemo_buf[conf_addr+1];
 	switch(id) {
-		case MNEMO_ID_LAMP:
-			mnemo_draw_lamp(&mnemo_buf[conf_addr]);
-			break;
+//		case MNEMO_ID_LAMP:
+//			mnemo_draw_lamp(&mnemo_buf[conf_addr]);
+//			break;
 		case MNEMO_ID_BACKGROUND_IMAGE:
 			mnemo_draw_background_image(&mnemo_buf[conf_addr]);
 			break;
-		case MNEMO_ID_LOAD_CYR_FONTS:
-			mnemo_load_cyr_fonts(&mnemo_buf[conf_addr]);
+//		case MNEMO_ID_LOAD_CYR_FONTS:
+//			mnemo_load_cyr_fonts(&mnemo_buf[conf_addr]);
+//			break;
+//		case MNEMO_ID_TEXT:
+//			mnemo_draw_text(&mnemo_buf[conf_addr]);
+//			break;
+//		case MNEMO_ID_BACKGROUND_COL:
+//			mnemo_draw_background_col(&mnemo_buf[conf_addr]);
+//			break;
+//		case MNEMO_ID_GAUGE:
+//			mnemo_draw_gauge(&mnemo_buf[conf_addr]);
+//			break;
+//		case MNEMO_ID_NUMBER:
+//			mnemo_draw_number(&mnemo_buf[conf_addr]);
+//			break;
+//		case MNEMO_ID_TEXT_VAR:
+//			mnemo_draw_text_var(&mnemo_buf[conf_addr]);
+//			break;
+//		case MNEMO_ID_PROGR:
+//			mnemo_draw_progress(&mnemo_buf[conf_addr]);
+//			break;
+		case MNEMO_ID_FILLED_RECT:
+			mnemo_draw_filled_rect(&mnemo_buf[conf_addr]);
 			break;
-		case MNEMO_ID_TEXT:
-			mnemo_draw_text(&mnemo_buf[conf_addr]);
-			break;
-		case MNEMO_ID_BACKGROUND_COL:
-			mnemo_draw_background_col(&mnemo_buf[conf_addr]);
-			break;
-		case MNEMO_ID_GAUGE:
-			mnemo_draw_gauge(&mnemo_buf[conf_addr]);
-			break;
-		case MNEMO_ID_NUMBER:
-			mnemo_draw_number(&mnemo_buf[conf_addr]);
-			break;
-		case MNEMO_ID_TEXT_VAR:
-			mnemo_draw_text_var(&mnemo_buf[conf_addr]);
-			break;
-		case MNEMO_ID_PROGR:
-			mnemo_draw_progress(&mnemo_buf[conf_addr]);
+		case MNEMO_ID_FILLED_CIRCLE:
+			mnemo_draw_filled_circle(&mnemo_buf[conf_addr]);
 			break;
 	}
 //	switch(elem_num) {
@@ -681,6 +836,7 @@ void draw_mnemo() {
 		uint16_t offset = mnemo_buf[MNEMO_HEADER_LENGTH + i*MNEMO_ONE_ELEM_LINK_WIDTH];
 		offset = offset << 8;
 		offset |= mnemo_buf[MNEMO_HEADER_LENGTH + i*MNEMO_ONE_ELEM_LINK_WIDTH + 1];
+		offset += 6;
 		mnemo_draw_element(offset);
 	}
 

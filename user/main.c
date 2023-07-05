@@ -165,7 +165,7 @@ void network_task_function(void *pvParameters)
 		cnt++;
 		if(cnt%900==0) {
 			//imitate_plc_data();
-			at32_led_toggle(LED_POW);
+			//at32_led_toggle(LED_POW);
 			send_heartbeat();
 			cur_long_time = time_to_uint32();
 		}

@@ -16,6 +16,7 @@
 #include "at32f435_437_board.h"
 #include "var_link.h"
 #include "cluster_state.h"
+#include "crc.h"
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
@@ -379,4 +380,89 @@ uint8_t get_manage_var(uint16_t i, manage_var *var) {
 		}
 	}
 	return res;
+}
+
+uint8_t check_config_header(uint8_t *ptr) {
+	if((ptr[0]==0x0D)&&(ptr[1]==0x0A)&&(ptr[2]==0x0A)&&(ptr[3]==0x0D)) {
+		uint16_t length = (uint16_t)ptr[4]<<8;
+		length |= ptr[5];
+		if(length>4096) length = 4096;
+		if(length<2) length = 2;
+		length-=2;
+		ptr[4] = 0;
+		ptr[5] = 0;
+		uint16_t crc = GetCRC16(ptr, length);
+		if((ptr[length] == (crc&0xFF))&&(ptr[length+1] == (crc>>8))) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+uint32_t get_config_param_by_id(uint16_t id,uint8_t *header) {
+	const uint16_t offset = 6;
+	const uint16_t max_length = 4096;
+	const uint16_t step = 10;
+	uint32_t res = 0;
+	uint16_t pos = offset;
+	while(pos<max_length) {
+		uint16_t cur_id = ((uint16_t)header[pos]<<8)|header[pos+1];
+		if(cur_id==id) {
+			res = header[pos+2];
+			res = res << 8;
+			res |= header[pos+3];
+			res = res << 8;
+			res |= header[pos+4];
+			res = res << 8;
+			res |= header[pos+5];
+			break;
+		}
+		pos+=step;
+	}
+	return res;
+}
+
+uint32_t get_config_offset_by_id(uint16_t id, uint8_t *header) {
+	const uint16_t offset = 6;
+	const uint16_t max_length = 4096;
+	const uint16_t step = 10;
+	uint32_t res = 0;
+	uint16_t pos = offset;
+	while(pos<max_length) {
+		uint16_t cur_id = ((uint16_t)header[pos]<<8)|header[pos+1];
+		if(cur_id==id) {
+			res = header[pos+6];
+			res = res << 8;
+			res |= header[pos+7];
+			res = res << 8;
+			res |= header[pos+8];
+			res = res << 8;
+			res |= header[pos+9];
+			break;
+		}
+		pos+=step;
+	}
+	return res;
+}
+
+uint8_t check_item_config(uint8_t *ptr, uint16_t id) {
+	uint8_t res = 0;
+	uint16_t cur_id = ((uint16_t)ptr[0]<<8) | ptr[1];
+	if(cur_id == id) {
+		uint16_t length = ((uint16_t)ptr[2]<<8) | ptr[3];
+		if(length>4096) length = 4096;
+		if(length<2) length = 2;
+		length-=2;
+		ptr[2] = 0;
+		ptr[3] = 0;
+		uint16_t crc = GetCRC16(ptr, length);
+		if((ptr[length] == (crc&0xFF))&&(ptr[length+1] == (crc>>8))) {
+			return 1;
+		}
+	}
+	return res;
+}
+
+uint16_t get_item_conf_version(uint8_t *ptr) {
+	return ((uint16_t)ptr[4]<<8) | ptr[5];
 }

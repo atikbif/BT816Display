@@ -37,4 +37,10 @@ uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf);
 void read_password();
 uint8_t get_manage_var(uint16_t i, manage_var *var);
 
+uint8_t check_config_header(uint8_t *ptr);
+uint32_t get_config_param_by_id(uint16_t id,uint8_t *header);
+uint32_t get_config_offset_by_id(uint16_t id, uint8_t *header);
+uint8_t check_item_config(uint8_t *ptr, uint16_t id);
+uint16_t get_item_conf_version(uint8_t *ptr);
+
 #endif /* INCLUDE_CONFIG_H_ */
