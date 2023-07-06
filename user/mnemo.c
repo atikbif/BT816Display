@@ -159,6 +159,7 @@ uint8_t read_mnemo_data(uint16_t mnemo_num) {
 			return 1;
 		}
 	}
+
 //	if(mnemo_num==0) {
 //		for(uint16_t i=0;i<sizeof(mnemo1_data);i++) mnemo_buf[i] = mnemo1_data[i];
 //		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
@@ -331,7 +332,7 @@ void mnemo_draw_text(const uint8_t *ptr) {
 		col |= (uint32_t)red_val<<16;
 		col |= (uint32_t)green_val<<8;
 		col |= blue_val;
-		bt816_cmd_dl(col);
+		bt816_cmd_dl(DL_COLOR_RGB | col);
 		bt816_cmd_text(x_pos, y_pos, font, 0, str);
 	}
 }
@@ -340,10 +341,11 @@ void mnemo_load_cyr_fonts(const uint8_t *ptr) {
 	uint16_t id = ((uint16_t)ptr[0]<<8)|ptr[1];
 	if(id==MNEMO_ID_LOAD_CYR_FONTS) {
 		uint8_t ver = ptr[2];
-		bt816_cmd_setfont2(1,MEM_FONT14,32);
-		bt816_cmd_setfont2(2,MEM_FONT22,32);
-		bt816_cmd_setfont2(3,MEM_FONT30,32);
-		bt816_cmd_setfont2(4,MEM_FONT40,32);
+
+		bt816_cmd_setfont2(1,MEM_FONT14,0);
+		bt816_cmd_setfont2(2,MEM_FONT22,0);
+		bt816_cmd_setfont2(3,MEM_FONT30,0);
+		bt816_cmd_setfont2(4,MEM_FONT40,0);
 	}
 }
 
@@ -642,12 +644,12 @@ void mnemo_draw_element(uint16_t conf_addr) {
 		case MNEMO_ID_BACKGROUND_IMAGE:
 			mnemo_draw_background_image(&mnemo_buf[conf_addr]);
 			break;
-//		case MNEMO_ID_LOAD_CYR_FONTS:
-//			mnemo_load_cyr_fonts(&mnemo_buf[conf_addr]);
-//			break;
-//		case MNEMO_ID_TEXT:
-//			mnemo_draw_text(&mnemo_buf[conf_addr]);
-//			break;
+		case MNEMO_ID_LOAD_CYR_FONTS:
+			mnemo_load_cyr_fonts(&mnemo_buf[conf_addr]);
+			break;
+		case MNEMO_ID_TEXT:
+			mnemo_draw_text(&mnemo_buf[conf_addr]);
+			break;
 //		case MNEMO_ID_BACKGROUND_COL:
 //			mnemo_draw_background_col(&mnemo_buf[conf_addr]);
 //			break;
