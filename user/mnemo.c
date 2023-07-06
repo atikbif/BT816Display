@@ -568,31 +568,45 @@ void mnemo_draw_lamp(const uint8_t *ptr) {
 	uint16_t id = ((uint16_t)ptr[0]<<8)|ptr[1];
 	if(id==MNEMO_ID_LAMP) {
 		uint8_t version = ptr[2];
-		uint8_t on_color = ptr[3];
-		uint8_t off_color = ptr[4];
-		uint8_t fault_color = ptr[5];
-		uint16_t link_type = ((uint16_t)ptr[6]<<8)|ptr[7];
-		uint16_t link_index = ((uint16_t)ptr[8]<<8)|ptr[9];
-		uint16_t x_pos = ((uint16_t)ptr[10]<<8)|ptr[11];
-		uint16_t y_pos = ((uint16_t)ptr[12]<<8)|ptr[13];
+
+		uint16_t x_pos = ((uint16_t)ptr[3]<<8)|ptr[4];
+		uint16_t y_pos = ((uint16_t)ptr[5]<<8)|ptr[6];
+
+		uint8_t on_color = ptr[7];
+		uint8_t off_color = ptr[8];
+		uint16_t link_type = ((uint16_t)ptr[9]<<8)|ptr[10];
+		uint16_t link_index = ((uint16_t)ptr[11]<<8)|ptr[12];
+
 		if(x_pos>=XPOS_MAX)  return;
 		if(y_pos>=YPOS_MAX)	return;
+
+		uint8_t value = 0;
+
 		switch(link_type) {
-			case VAR_LINK_DI:
-				if(link_index<DI_CNT) {
-					if(plc_di_state[link_index]==DI_ON) mnemo_draw_lamp_image(x_pos,y_pos,on_color);
-					else if(plc_di_state[link_index]==DI_OFF) mnemo_draw_lamp_image(x_pos,y_pos,off_color);
-					else if(plc_di_state[link_index]==DI_FAULT) mnemo_draw_lamp_image(x_pos,y_pos,fault_color);
+			case 0:	// DI
+				if(link_index<PC21_INP_CNT) {
+					value = cl.pc21.din[link_index].state;
 				}
 				break;
-			case VAR_LINK_DO:
-				if(link_index<DO_CNT) {
-					if(plc_do_state[link_index]==DO_ON) mnemo_draw_lamp_image(x_pos,y_pos,on_color);
-					else if(plc_do_state[link_index]==DO_OFF) mnemo_draw_lamp_image(x_pos,y_pos,off_color);
-					else if(plc_do_state[link_index]==DO_FAULT) mnemo_draw_lamp_image(x_pos,y_pos,fault_color);
+			case 1:	// DO
+				if(link_index<PC21_OUT_CNT) {
+					value = cl.pc21.dout[link_index].state;
+				}
+				break;
+			case 2:	// cluster bit
+				if(link_index<CLUST_BIT_CNT) {
+					value = cl.cluster_bits[link_index];
+				}
+				break;
+			case 3: // net bit
+				if(link_index<NET_BITS_CNT) {
+					value = cl.net_bits[link_index];
 				}
 				break;
 		}
+
+		if(value) mnemo_draw_lamp_image(x_pos,y_pos,on_color);
+		else mnemo_draw_lamp_image(x_pos,y_pos,off_color);
 	}
 }
 
@@ -638,9 +652,9 @@ void mnemo_draw_lamp_image(uint16_t x, uint16_t y, enum LAMP_COL col) {
 void mnemo_draw_element(uint16_t conf_addr) {
 	uint16_t id = ((uint16_t)mnemo_buf[conf_addr]<<8)|mnemo_buf[conf_addr+1];
 	switch(id) {
-//		case MNEMO_ID_LAMP:
-//			mnemo_draw_lamp(&mnemo_buf[conf_addr]);
-//			break;
+		case MNEMO_ID_LAMP:
+			mnemo_draw_lamp(&mnemo_buf[conf_addr]);
+			break;
 		case MNEMO_ID_BACKGROUND_IMAGE:
 			mnemo_draw_background_image(&mnemo_buf[conf_addr]);
 			break;
