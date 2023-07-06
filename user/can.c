@@ -255,8 +255,8 @@ void check_can_rx_data(can_rx_message_type *rx) {
 			case 0x0F:
 				intern_addr = intern_addr - (can_id->clust_addr*16) - 1;
 				if(intern_addr<NET_REGS_CNT) {
-					plc_net_regs[intern_addr-1] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
-					cl.net_regs[intern_addr-1] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
+					plc_net_regs[intern_addr] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
+					cl.net_regs[intern_addr] = ((uint16_t)rx_packet.data[3]<<8)|rx_packet.data[2];
 				}
 				break;
 			case 0x1F:
@@ -276,7 +276,7 @@ void check_can_rx_data(can_rx_message_type *rx) {
 void send_heartbeat() {
 	static uint8_t heartbeat_value = 1;
 
-	uint8_t can_addr = 0x06;
+	uint8_t can_addr = 0x02;
 
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
@@ -292,7 +292,7 @@ void send_heartbeat() {
 }
 
 void write_clust_bit(uint16_t num, uint8_t value) {
-	uint8_t can_addr = 0x06;
+	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
 	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
@@ -309,7 +309,7 @@ void write_clust_bit(uint16_t num, uint8_t value) {
 }
 
 void write_net_bit(uint16_t num, uint8_t value) {
-	uint8_t can_addr = 0x06;
+	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
 	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
@@ -326,7 +326,7 @@ void write_net_bit(uint16_t num, uint8_t value) {
 }
 
 void write_clust_reg(uint16_t num, uint16_t value) {
-	uint8_t can_addr = 0x06;
+	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
 	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
@@ -342,7 +342,7 @@ void write_clust_reg(uint16_t num, uint16_t value) {
 }
 
 void write_net_reg(uint16_t num, uint16_t value) {
-	uint8_t can_addr = 0x06;
+	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
 	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);

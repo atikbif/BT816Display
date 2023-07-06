@@ -56,71 +56,6 @@ extern cluster cl;
 #define YPOS_MAX	480
 
 const uint8_t mnemo1_data[] = {
-	0x15,0xA2,0x00,27,	// 0x00
-	0x00,0x42,	// 0x04
-	0x00,0x49,	// 0x06
-	0x00,0x57,	// 0x08
-	0x00,0x65,	// 0x0A
-	0x00,0x73,	// 0x0C
-	0x00,0x81,	// 0x0E
-	0x00,0x8F,	// 0x10
-	0x00,0x9D,	// 0x12
-	0x00,0xAB,	// 0x14
-	0x00,0xB9,	// 0x16
-	0x00,0xC7,	// 0x18
-	0x00,0xD5,	// 0x1A
-	0x00,0xE3,	// 0x1C
-	0x00,0xF1,	// 0x1E
-	0x00,0xFF,	// 0x20
-	0x01,0x0E,	// 0x22
-	0x01,0x1D,	// 0x24
-	0x01,0x2C,	// 0x26
-	0x01,0x3B,	// 0x28
-	0x01,0x4A,	// 0x2A
-	0x01,0x59,	// 0x2C
-	0x01,0x68,	// 0x2E
-	0x01,0x77,	// 0x30
-	0x01,0x86,	// 0x32
-	0x01,0x95,	// 0x34
-	0x01,0xA4,	// 0x36
-	0x01,0xB3,	// 0x38
-	0x00,0x00,	// 0x3A
-	0x00,0x00,	// 0x3C
-	0x00,0x00,	// 0x3E
-	0x00,0x00,	// 0x40
-	MNEMO_ID_BACKGROUND_IMAGE>>8,MNEMO_ID_BACKGROUND_IMAGE&0xFF,1,0x00,0x20,0x00,0x00,	// 0x42
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,0,0,75,0,50,	// 0x49
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,1,0,175,0,50,	// 0x57
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,2,275>>8,275&0xFF,0,50,	// 0x65
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,3,375>>8,375&0xFF,0,50,	// 0x73
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,4,475>>8,475&0xFF,0,50,	// 0x81
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,5,575>>8,575&0xFF,0,50,	// 0x8F
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_GREEN,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DI>>8,VAR_LINK_DI&0xFF,0,6,675>>8,675&0xFF,0,50,	// 0x9D
-
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_RED,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DO>>8,VAR_LINK_DO&0xFF,0,0,0,125,0,120,	// 0xAB
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_RED,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DO>>8,VAR_LINK_DO&0xFF,0,1,0,225,0,120,	// 0xB9
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_RED,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DO>>8,VAR_LINK_DO&0xFF,0,2,325>>8,325&0xFF,0,120,	// 0xC7
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_RED,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DO>>8,VAR_LINK_DO&0xFF,0,3,425>>8,425&0xFF,0,120,	// 0xD5
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_RED,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DO>>8,VAR_LINK_DO&0xFF,0,4,525>>8,525&0xFF,0,120,	// 0xE3
-	MNEMO_ID_LAMP>>8,MNEMO_ID_LAMP&0xFF,1,LAMP_RED,LAMP_GRAY,LAMP_YELLOW,VAR_LINK_DO>>8,VAR_LINK_DO&0xFF,0,5,625>>8,625&0xFF,0,120,	// 0xF1
-
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,90>>8,90&0xFF,105>>8,105&0xFF,26,'D','I','1',0,	// 0xFF
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,190>>8,190&0xFF,105>>8,105&0xFF,26,'D','I','2',0,	// 0x10E
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,290>>8,290&0xFF,105>>8,105&0xFF,26,'D','I','3',0,	// 0x11D
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,390>>8,390&0xFF,105>>8,105&0xFF,26,'D','I','4',0,	// 0x12C
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,490>>8,490&0xFF,105>>8,105&0xFF,26,'D','I','5',0,	// 0x13B
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,590>>8,590&0xFF,105>>8,105&0xFF,26,'D','I','6',0,	// 0x14A
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,690>>8,690&0xFF,105>>8,105&0xFF,26,'D','I','7',0,	// 0x159
-
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,140>>8,140&0xFF,175>>8,175&0xFF,26,'D','O','1',0,	// 0x168
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,240>>8,240&0xFF,175>>8,175&0xFF,26,'D','O','2',0,	// 0x177
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,340>>8,340&0xFF,175>>8,175&0xFF,26,'D','O','3',0,	// 0x186
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,440>>8,440&0xFF,175>>8,175&0xFF,26,'D','O','4',0,	// 0x195
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,540>>8,540&0xFF,175>>8,175&0xFF,26,'D','O','5',0,	// 0x1A4
-	MNEMO_ID_TEXT>>8,MNEMO_ID_TEXT&0xFF,1,0,0,0,640>>8,640&0xFF,175>>8,175&0xFF,26,'D','O','6',0,	// 0x1B3
-};
-
-const uint8_t mnemo2_data[] = {
 	0x15,0xA2,0x00,0x01,	// 0x00
 	0x00,0x06,	// 0x04
 	MNEMO_ID_BACKGROUND_IMAGE>>8,MNEMO_ID_BACKGROUND_IMAGE&0xFF,1,0x00,0x21,0x00,0x00,	// 0x06
@@ -407,7 +342,8 @@ void mnemo_draw_text_var(const uint8_t *ptr) {
 		uint16_t y_pos = ((uint16_t)ptr[5]<<8)|ptr[6];
 		if(x_pos>=XPOS_MAX)  return;
 		if(y_pos>=YPOS_MAX)	return;
-		uint8_t font  = ptr[7];
+		uint8_t font  = 1+ptr[7];
+		if(font>4) font = 4;
 		uint8_t precision = ptr[8];
 		if(precision>PR3) precision = PR3;
 		uint16_t link_type = ((uint16_t)ptr[9]<<8)|ptr[10];
@@ -418,13 +354,13 @@ void mnemo_draw_text_var(const uint8_t *ptr) {
 		int32_t value[2] = {0,0};
 		switch(link_type) {
 			case VAR_LINK_CL_REG:
-				if(link_index<CLUSTER_REGS_CNT) value[0] = plc_clust_regs[link_index];
+				if(link_index<CLUSTER_REGS_CNT) value[0] = cl.cluster_regs[link_index];
 				break;
 			case VAR_LINK_NET_REG:
-				if(link_index<NET_REGS_CNT) value[0] = plc_net_regs[link_index];
+				if(link_index<NET_REGS_CNT) value[0] = cl.net_regs[link_index];
 				break;
 			case VAR_LINK_RAW_AI:
-				if(link_index<AI_CNT) value[0] = plc_ain_raw[link_index];
+				if(link_index<AI_CNT) value[0] = cl.pc21.ain[link_index].raw;
 				break;
 			case VAR_LINK_CALC:
 				if(link_index<MAX_CALC_CNT) value[0] = calc[link_index].result;
@@ -673,9 +609,9 @@ void mnemo_draw_element(uint16_t conf_addr) {
 //		case MNEMO_ID_NUMBER:
 //			mnemo_draw_number(&mnemo_buf[conf_addr]);
 //			break;
-//		case MNEMO_ID_TEXT_VAR:
-//			mnemo_draw_text_var(&mnemo_buf[conf_addr]);
-//			break;
+		case MNEMO_ID_TEXT_VAR:
+			mnemo_draw_text_var(&mnemo_buf[conf_addr]);
+			break;
 //		case MNEMO_ID_PROGR:
 //			mnemo_draw_progress(&mnemo_buf[conf_addr]);
 //			break;
