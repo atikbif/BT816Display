@@ -13,6 +13,8 @@
 #include "cluster_state_menu.h"
 #include "trend_data.h"
 
+uint8_t lcd_can_addr = 0x02;
+
 extern cluster cl;
 
 enum Service_type {SRV_Channel, SRV_Heartbeat, SRV_Download, SRV_Spare, SRV_Write, SRV_Read, SRV_Action, SRV_Event};
@@ -276,11 +278,9 @@ void check_can_rx_data(can_rx_message_type *rx) {
 void send_heartbeat() {
 	static uint8_t heartbeat_value = 1;
 
-	uint8_t can_addr = 0x02;
-
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x01 | (can_addr<<3) | (cluster_addr << 7);
+	tx_message_struct.standard_id = 0x0400 | 0x01 | (lcd_can_addr<<3) | (cluster_addr << 7);
 	tx_message_struct.extended_id = 0;
 	tx_message_struct.id_type = CAN_ID_STANDARD;
 	tx_message_struct.frame_type = CAN_TFT_DATA;
@@ -292,10 +292,9 @@ void send_heartbeat() {
 }
 
 void write_clust_bit(uint16_t num, uint8_t value) {
-	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
+	tx_message_struct.standard_id = 0x0400 | 0x07 | (plc_can_addr<<3) | (cluster_addr << 7);
 	tx_message_struct.extended_id = 0;
 	tx_message_struct.id_type = CAN_ID_STANDARD;
 	tx_message_struct.frame_type = CAN_TFT_DATA;
@@ -309,10 +308,9 @@ void write_clust_bit(uint16_t num, uint8_t value) {
 }
 
 void write_net_bit(uint16_t num, uint8_t value) {
-	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
+	tx_message_struct.standard_id = 0x0400 | 0x07 | (lcd_can_addr<<3) | (cluster_addr << 7);
 	tx_message_struct.extended_id = 0;
 	tx_message_struct.id_type = CAN_ID_STANDARD;
 	tx_message_struct.frame_type = CAN_TFT_DATA;
@@ -326,10 +324,9 @@ void write_net_bit(uint16_t num, uint8_t value) {
 }
 
 void write_clust_reg(uint16_t num, uint16_t value) {
-	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
+	tx_message_struct.standard_id = 0x0400 | 0x07 | (lcd_can_addr<<3) | (cluster_addr << 7);
 	tx_message_struct.extended_id = 0;
 	tx_message_struct.id_type = CAN_ID_STANDARD;
 	tx_message_struct.frame_type = CAN_TFT_DATA;
@@ -342,10 +339,9 @@ void write_clust_reg(uint16_t num, uint16_t value) {
 }
 
 void write_net_reg(uint16_t num, uint16_t value) {
-	uint8_t can_addr = 0x02;
 	uint8_t transmit_mailbox;
 	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (can_addr<<3) | (cluster_addr << 7);
+	tx_message_struct.standard_id = 0x0400 | 0x07 | (lcd_can_addr<<3) | (cluster_addr << 7);
 	tx_message_struct.extended_id = 0;
 	tx_message_struct.id_type = CAN_ID_STANDARD;
 	tx_message_struct.frame_type = CAN_TFT_DATA;

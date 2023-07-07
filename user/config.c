@@ -32,6 +32,8 @@ uint8_t check_config_result = 0;
 
 extern cluster cl;
 
+extern uint8_t lcd_can_addr;
+
 #define MAN_VAR_CNT		15
 const char* man_var_names[MAN_VAR_CNT] = {
 		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x31",
@@ -88,7 +90,20 @@ void read_config() {
 		memcpy(appl_info_data.name,appl_name,strlen(appl_name));
 	}
 
-
+	bt816_cmd_flashread(0, 4096, 4096);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(10,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 10)) {
+			lcd_can_addr = conf_buf[6];
+		}
+	}
 
 	cluster_data.used_plc[0]=1;
 	cluster_data.used_plc[1]=0;
