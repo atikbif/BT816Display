@@ -43,6 +43,8 @@
 #include "edit_trend_menu.h"
 #include "draw_trend_menu.h"
 
+uint8_t prog_mode_flag = 0;
+
 uint8_t mnemo_num = 0;
 extern uint16_t mnemo_cnt;
 
@@ -185,6 +187,7 @@ void main_menu(uint16_t key) {
 			current_menu = MENU_MNEMO;
 			break;
 		case KEY_0:
+			prog_mode_flag = 1;
 			init_prog_menu();
 			current_menu = MENU_PROG;
 			break;

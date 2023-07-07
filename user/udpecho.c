@@ -24,6 +24,8 @@ static struct netbuf *tx_net_buf;
 static ip_addr_t *addr;
 static unsigned short port;
 
+extern uint8_t prog_mode_flag;
+
 static volatile uint8_t fl_buf[BLOCK_SIZE];
 
 
@@ -60,22 +62,30 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 						res = 8 + tmp;
 						break;
 					case 0x01:	// update flash
+
 						addr = rx[8];addr = addr<<8;
 						addr |= rx[9];addr = addr<<8;
 						addr |= rx[10];addr = addr<<8;
 						addr |= rx[11];
 						tmp = rx[12]; // subpacket num - 0..BLOCK_SIZE/PACKET_DATA_SIZE-1
-						if(addr%BLOCK_SIZE==0 && (tmp<BLOCK_SIZE/PACKET_DATA_SIZE) && (rx_cnt==13+PACKET_DATA_SIZE)) {
-							if(tmp==0) for(i=0;i<BLOCK_SIZE;i++) fl_buf[offset+i] = 0;
-							offset = PACKET_DATA_SIZE*tmp;
-							for(i=0;i<PACKET_DATA_SIZE;i++) fl_buf[offset+i] = rx[13+i];
-							if(tmp==BLOCK_SIZE/PACKET_DATA_SIZE-1) {
-								bt816_cmd_memwrite(0,BLOCK_SIZE,(uint8_t*)fl_buf);
-								bt816_cmd_flashupdate(addr,0,BLOCK_SIZE);
+
+						if(prog_mode_flag) {
+							if(addr%BLOCK_SIZE==0 && (tmp<BLOCK_SIZE/PACKET_DATA_SIZE) && (rx_cnt==13+PACKET_DATA_SIZE)) {
+								if(tmp==0) for(i=0;i<BLOCK_SIZE;i++) fl_buf[offset+i] = 0;
+								offset = PACKET_DATA_SIZE*tmp;
+								for(i=0;i<PACKET_DATA_SIZE;i++) fl_buf[offset+i] = rx[13+i];
+								if(tmp==BLOCK_SIZE/PACKET_DATA_SIZE-1) {
+									bt816_cmd_memwrite(0,BLOCK_SIZE,(uint8_t*)fl_buf);
+									bt816_cmd_flashupdate(addr,0,BLOCK_SIZE);
+								}
+								udp_tx[8] = 1; // success
+								res = 9;
 							}
-							udp_tx[8] = 1; // success
-							res = 9;
+						}else {
+							// access denied
 						}
+
+
 						break;
 					case 0x02:	// read flash
 						addr = rx[8];addr = addr<<8;
@@ -83,12 +93,17 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 						addr |= rx[10];addr = addr<<8;
 						addr |= rx[11];
 						cnt = ((uint16_t)rx[12]<<8) | rx[13];	// length
-						bt816_cmd_flashread(0, addr, cnt);
-						udp_tx[8] = 1; // success
-						for(i=0;i<cnt;i++) {
-							udp_tx[9+i] = bt816_mem_read8(i);
+						if(prog_mode_flag) {
+							bt816_cmd_flashread(0, addr, cnt);
+							udp_tx[8] = 1; // success
+							for(i=0;i<cnt;i++) {
+								udp_tx[9+i] = bt816_mem_read8(i);
+							}
+							res = 9 + cnt;
+						}else {
+							// access denied
 						}
-						res = 9 + cnt;
+
 						break;
 				}
 			}

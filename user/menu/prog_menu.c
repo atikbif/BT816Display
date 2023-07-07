@@ -16,6 +16,8 @@
 static uint8_t prog_menu_cmd = 0;
 extern menu_list_t current_menu;
 
+extern uint8_t prog_mode_flag;
+
 void init_prog_menu() {
 	prog_menu_cmd = 1;
 }
@@ -37,6 +39,7 @@ void prog_menu(uint16_t key) {
 		case KEY_ENTER:
 		case KEY_EXIT:
 			current_menu = MENU_MAIN;
+			prog_mode_flag = 0;
 			break;
 	}
 }
