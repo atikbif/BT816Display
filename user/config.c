@@ -54,7 +54,6 @@ const char* man_var_names[MAN_VAR_CNT] = {
 void read_config() {
 
 	bt816_cmd_flashread(0, 4096, 4096);
-	//vTaskDelay(1);
 	for(uint16_t i=0;i<4096;i++) {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
@@ -338,16 +337,57 @@ uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf) {
 }
 
 void read_calculation_config(const uint8_t *ptr) {
-	// imitation read from flash
-	calc_total_cnt = 14;
-	for(uint16_t i=0;i<calc_total_cnt;i++) {
-		calc[i].k = 1.0;
-		calc[i].b = 0;
-		calc[i].link = LINK_RAW;
-		calc[i].index = i;
-		calc[i].result = 0;
-		calc[i].prec = PR1;
+	bt816_cmd_flashread(0, 4096, 4096);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
 	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(9,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 9)) {
+			calc_total_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+			if(calc_total_cnt>=PC21_INP_CNT) calc_total_cnt = PC21_INP_CNT;
+			for (uint16_t i=0;i<calc_total_cnt;i++) {
+				calc[i].index = ((uint16_t)conf_buf[8 + i*12]<<8) | conf_buf[9 + i*12];
+				calc[i].link = conf_buf[10 + i*12];
+				if(calc[i].link>=CALC_LAST_LINK) calc[i].link = LINK_RAW;
+				calc[i].prec = conf_buf[11 + i*12];
+				if(calc[i].prec > PR3) calc[i].prec = PR3;
+
+				union {
+					float a;
+					uint8_t bytes[4];
+				} float_converter;
+
+				float_converter.bytes[0] = conf_buf[12 + i*12];
+				float_converter.bytes[1] = conf_buf[13 + i*12];
+				float_converter.bytes[2] = conf_buf[14 + i*12];
+				float_converter.bytes[3] = conf_buf[15 + i*12];
+				calc[i].k = float_converter.a;
+
+				float_converter.bytes[0] = conf_buf[16 + i*12];
+				float_converter.bytes[1] = conf_buf[17 + i*12];
+				float_converter.bytes[2] = conf_buf[18 + i*12];
+				float_converter.bytes[3] = conf_buf[19 + i*12];
+				calc[i].b = float_converter.a;
+
+			}
+		}else {
+			calc_total_cnt = 14;
+			for(uint16_t i=0;i<calc_total_cnt;i++) {
+				calc[i].k = 1.0;
+				calc[i].b = 0;
+				calc[i].link = LINK_RAW;
+				calc[i].index = i;
+				calc[i].result = 0;
+				calc[i].prec = PR1;
+			}
+		}
+	}
+
 }
 
 void read_password() {

@@ -37,12 +37,11 @@ void lcd_task_function(void *pvParameters)
 	vTaskDelay(500);
 	bt816_spi_init();
 	init_plc_data();
-	read_calculation_config(0);
+
 	can1_init();
 	init_cluster(&cl);
 	init_cur_time();
 	init_trends();
-	read_password();
 
 	uint8_t try = 0;
 	while(try<5) {
@@ -53,6 +52,8 @@ void lcd_task_function(void *pvParameters)
 	init_display_fonts();
 	init_mnemo();
 	read_config();
+	read_calculation_config(0);
+	read_password();
 	read_mnemo_data(mnemo_num);
 	init_menu();
 	while(1)
