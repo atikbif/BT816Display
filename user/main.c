@@ -68,6 +68,9 @@ TaskHandle_t network_handler;
 TaskHandle_t lcd_handler;
 TaskHandle_t key_handler;
 
+volatile uint8_t rst_flag = 0;
+volatile uint16_t rst_tmr = 0;
+
 void network_task_function(void *pvParameters);
 
 /**
@@ -193,6 +196,11 @@ void network_task_function(void *pvParameters)
 			plc_can_link = 0;
 			cluster_data.plc_link[0] = 0;
 		}
+		if(rst_flag) {
+			if(rst_tmr) rst_tmr--;
+			if(rst_tmr==0) NVIC_SystemReset();
+		}
+
 		//at32_led_toggle(LED_POW);
 		vTaskDelay(1);
 

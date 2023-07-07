@@ -25,6 +25,8 @@ static ip_addr_t *addr;
 static unsigned short port;
 
 extern uint8_t prog_mode_flag;
+extern uint8_t rst_flag;
+extern uint16_t rst_tmr;
 
 static volatile uint8_t fl_buf[BLOCK_SIZE];
 
@@ -70,6 +72,8 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 						tmp = rx[12]; // subpacket num - 0..BLOCK_SIZE/PACKET_DATA_SIZE-1
 
 						if(prog_mode_flag) {
+							rst_flag = 1;
+							rst_tmr = 2000;
 							if(addr%BLOCK_SIZE==0 && (tmp<BLOCK_SIZE/PACKET_DATA_SIZE) && (rx_cnt==13+PACKET_DATA_SIZE)) {
 								if(tmp==0) for(i=0;i<BLOCK_SIZE;i++) fl_buf[offset+i] = 0;
 								offset = PACKET_DATA_SIZE*tmp;
