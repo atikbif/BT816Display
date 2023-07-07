@@ -60,6 +60,15 @@ void lcd_task_function(void *pvParameters)
 	{
 		//draw_mnemo();
 
+		uint32_t space = bt816_mem_read32(REG_CMDB_SPACE);
+		if((space & 0x3) != 0) {
+			bt816_mem_write8(REG_CPURESET, 1);   /* hold co-processor engine in the reset condition */
+			bt816_mem_write16(REG_CMD_READ, 0);  /* set REG_CMD_READ to 0 */
+			bt816_mem_write16(REG_CMD_WRITE, 0); /* set REG_CMD_WRITE to 0 */
+			bt816_mem_write32(REG_CMD_DL, 0);    /* reset REG_CMD_DL to 0 as required by the BT81x programming guide, should not hurt FT8xx */
+			bt816_mem_write8(REG_CPURESET, 0);
+		}
+
 		uint16_t cur_key = get_pressed_keys();
 		if(cur_key && (cur_key!=prev_key)) {
 			key_cmd = cur_key;

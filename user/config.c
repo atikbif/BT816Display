@@ -18,6 +18,8 @@
 #include "cluster_state.h"
 #include "crc.h"
 #include "bt816_cmd.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
@@ -25,6 +27,9 @@ extern calc_config calc[MAX_CALC_CNT];
 extern uint16_t calc_total_cnt;
 extern uint8_t passwd[6];
 extern ertc_time_type dev_time;
+
+uint32_t net_reg_names_addr = 0;
+uint16_t net_reg_names_cnt = 0;
 
 uint8_t conf_buf[4096];
 
@@ -102,6 +107,22 @@ void read_config() {
 		}
 		if(check_item_config(conf_buf, 10)) {
 			lcd_can_addr = conf_buf[6];
+		}
+	}
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(5,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 5)) {
+			net_reg_names_addr = 4096 + addr + 64;
+			net_reg_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
 		}
 	}
 
@@ -276,36 +297,49 @@ uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf) {
 	const char msg6[] = "CONT IN";
 	const char msg7[] = "CONT OUT";
 	uint8_t res = 0;
-	switch(num) {
-		case 0:
-			memcpy(buf,msg1,sizeof(msg1));
-			res = strlen(msg1);
-			break;
-		case 1:
-			memcpy(buf,msg2,sizeof(msg2));
-			res = strlen(msg2);
-			break;
-		case 2:
-			memcpy(buf,msg3,sizeof(msg3));
-			res = strlen(msg3);
-			break;
-		case 3:
-			memcpy(buf,msg4,sizeof(msg4));
-			res = strlen(msg4);
-			break;
-		case 4:
-			memcpy(buf,msg5,sizeof(msg5));
-			res = strlen(msg5);
-			break;
-		case 5:
-			memcpy(buf,msg6,sizeof(msg6));
-			res = strlen(msg6);
-			break;
-		case 6:
-			memcpy(buf,msg7,sizeof(msg7));
-			res = strlen(msg7);
-			break;
+
+	if(net_reg_names_addr && (num < net_reg_names_cnt)) {
+		uint8_t user_name[41];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, net_reg_names_addr+64+128ul*num, 64);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<40;i++) {
+			user_name[i] = bt816_mem_read8(i);
+		}
+		memcpy(buf,user_name,sizeof(user_name));
+		res = strlen(user_name);
 	}
+
+//	switch(num) {
+//		case 0:
+//			memcpy(buf,msg1,sizeof(msg1));
+//			res = strlen(msg1);
+//			break;
+//		case 1:
+//			memcpy(buf,msg2,sizeof(msg2));
+//			res = strlen(msg2);
+//			break;
+//		case 2:
+//			memcpy(buf,msg3,sizeof(msg3));
+//			res = strlen(msg3);
+//			break;
+//		case 3:
+//			memcpy(buf,msg4,sizeof(msg4));
+//			res = strlen(msg4);
+//			break;
+//		case 4:
+//			memcpy(buf,msg5,sizeof(msg5));
+//			res = strlen(msg5);
+//			break;
+//		case 5:
+//			memcpy(buf,msg6,sizeof(msg6));
+//			res = strlen(msg6);
+//			break;
+//		case 6:
+//			memcpy(buf,msg7,sizeof(msg7));
+//			res = strlen(msg7);
+//			break;
+//	}
 	return res;
 }
 

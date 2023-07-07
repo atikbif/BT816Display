@@ -27,6 +27,8 @@ static uint8_t down_sign = 0;
 static uint8_t up_sign = 0;
 
 void global_integers_menu(uint16_t key) {
+
+
 	bt816_cmd_dl(CMD_DLSTART); /* start the display list */
 	bt816_cmd_dl(DL_CLEAR_COLOR_RGB | BLACK);
 	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);
@@ -45,6 +47,7 @@ void global_integers_menu(uint16_t key) {
 	if(first_visible_record) up_sign=1;else up_sign=0;
 	if(first_visible_record+max_records_cnt<CLUSTER_REGS_CNT) down_sign=1;else down_sign=0;
 
+
 	for(int i=0;i<CLUSTER_REGS_CNT;i++) {
 		if(i>=first_visible_record && (i<(first_visible_record+max_records_cnt))) {
 			for(int j=0;j<sizeof(rec_buf);j++) rec_buf[j]=0;
@@ -59,12 +62,15 @@ void global_integers_menu(uint16_t key) {
 			num_buf[1] = 'O';
 			num_buf[2] = (i+1)/10 + '0';
 			num_buf[3] = (i+1)%10 + '0';
-			bt816_cmd_text(300, 95+(i-first_visible_record)*30, 1, 0, num_buf);
+			bt816_cmd_text(400, 95+(i-first_visible_record)*30, 1, 0, num_buf);
 
-			bt816_cmd_number(400, 95+(i-first_visible_record)*30, 1, 0, cl.cluster_regs[i]);
+			bt816_cmd_number(500, 95+(i-first_visible_record)*30, 1, 0, cl.cluster_regs[i]);
 		}
 
 	}
+
+
+
 
 	if(up_sign) {
 		bt816_cmd_dl(DL_COLOR_RGB | BLUE);
