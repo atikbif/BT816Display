@@ -12,7 +12,7 @@
 
 typedef struct {
 	uint16_t id;
-	uint8_t name[21];
+	uint8_t name[41];
 	uint8_t vers_major;
 	uint8_t vers_minor;
 	uint8_t date;

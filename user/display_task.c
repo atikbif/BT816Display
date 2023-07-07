@@ -50,9 +50,9 @@ void lcd_task_function(void *pvParameters)
 		vTaskDelay(100);
 		try++;
 	}
-	read_config();
 	init_display_fonts();
 	init_mnemo();
+	read_config();
 	read_mnemo_data(mnemo_num);
 	init_menu();
 	while(1)

@@ -62,7 +62,7 @@ const uint8_t mnemo1_data[] = {
 };
 
 uint8_t mnemo_buf[4096];
-static uint8_t conf_buf[4096];
+extern uint8_t conf_buf[4096];
 
 static void mnemo_draw_lamp_image(uint16_t x, uint16_t y, enum LAMP_COL col);
 
@@ -94,20 +94,6 @@ uint8_t read_mnemo_data(uint16_t mnemo_num) {
 			return 1;
 		}
 	}
-
-//	if(mnemo_num==0) {
-//		for(uint16_t i=0;i<sizeof(mnemo1_data);i++) mnemo_buf[i] = mnemo1_data[i];
-//		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
-//			// check crc
-//			return 1;
-//		}
-//	}else if(mnemo_num==1) {
-//		for(uint16_t i=0;i<sizeof(mnemo2_data);i++) mnemo_buf[i] = mnemo2_data[i];
-//		if((mnemo_buf[0]==MNEMO_DESCR_START>>8)&&(mnemo_buf[0]==MNEMO_DESCR_START&0xFF)) {
-//			// check crc
-//			return 1;
-//		}
-//	}
 	return 0;
 }
 

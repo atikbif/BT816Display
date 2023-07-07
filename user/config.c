@@ -17,6 +17,7 @@
 #include "var_link.h"
 #include "cluster_state.h"
 #include "crc.h"
+#include "bt816_cmd.h"
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
@@ -24,6 +25,10 @@ extern calc_config calc[MAX_CALC_CNT];
 extern uint16_t calc_total_cnt;
 extern uint8_t passwd[6];
 extern ertc_time_type dev_time;
+
+uint8_t conf_buf[4096];
+
+uint8_t check_config_result = 0;
 
 extern cluster cl;
 
@@ -47,14 +52,44 @@ const char* man_var_names[MAN_VAR_CNT] = {
 };
 
 void read_config() {
-	const char appl_name[] = "test";
-	appl_info_data.id = 12345;
-	appl_info_data.vers_major = 1;
-	appl_info_data.vers_minor = 35;
-	appl_info_data.date = 15;
-	appl_info_data.month = 3;
-	appl_info_data.year = 23;
-	memcpy(appl_info_data.name,appl_name,strlen(appl_name));
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	//vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	check_config_result = 0;
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(0,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 0)) {
+			check_config_result = 1;
+		}
+	}
+	if(check_config_result) {
+		appl_info_data.id = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		appl_info_data.vers_major = conf_buf[8];
+		appl_info_data.vers_minor = conf_buf[9];
+		appl_info_data.date = conf_buf[10];
+		appl_info_data.month = conf_buf[11];
+		appl_info_data.year = conf_buf[12];
+		for(int i=0;i<41;i++) appl_info_data.name[40] = 0;
+		for(int i=0;i<40;i++) appl_info_data.name[i] = conf_buf[18+i];
+	}else {
+		const char appl_name[] = "bad config";
+		appl_info_data.id = 12345;
+		appl_info_data.vers_major = 1;
+		appl_info_data.vers_minor = 35;
+		appl_info_data.date = 15;
+		appl_info_data.month = 3;
+		appl_info_data.year = 23;
+		memcpy(appl_info_data.name,appl_name,strlen(appl_name));
+	}
+
+
 
 	cluster_data.used_plc[0]=1;
 	cluster_data.used_plc[1]=0;
@@ -65,10 +100,6 @@ void read_config() {
 	cluster_data.plc_link[3]=0;
 	cluster_data.plc_link[7]=0;
 	cluster_data.plc_type[0] = PC21_1;
-	//cluster_data.plc_type[1] = PC21_CD;
-	//cluster_data.plc_type[3] = PC21_MC;
-	//cluster_data.plc_type[7] = PC21_2T;
-
 
 	ertc_calendar_get(&dev_time);
 
