@@ -201,7 +201,7 @@ void network_task_function(void *pvParameters)
 			if(rst_tmr==0) NVIC_SystemReset();
 		}
 
-		//at32_led_toggle(LED_POW);
+		at32_led_toggle(LED_POW);
 		vTaskDelay(1);
 
 	}

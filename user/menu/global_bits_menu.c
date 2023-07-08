@@ -26,6 +26,9 @@ extern cluster cl;
 static uint8_t down_sign = 0;
 static uint8_t up_sign = 0;
 
+extern uint32_t net_bit_names_addr;
+extern uint16_t net_bit_names_cnt;
+
 void global_bits_menu(uint16_t key) {
 	bt816_cmd_dl(CMD_DLSTART); /* start the display list */
 	bt816_cmd_dl(DL_CLEAR_COLOR_RGB | BLACK);

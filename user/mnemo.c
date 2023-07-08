@@ -78,7 +78,7 @@ static void mnemo_draw_filled_circle(const uint8_t *ptr);
 uint8_t read_mnemo_data(uint16_t mnemo_num) {
 
 	bt816_cmd_flashread(0, 4096, 4096);
-	//vTaskDelay(1);
+	vTaskDelay(1);
 	for(uint16_t i=0;i<4096;i++) {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
@@ -86,6 +86,7 @@ uint8_t read_mnemo_data(uint16_t mnemo_num) {
 	if(check_config_header(conf_buf)) {
 		uint32_t addr = get_config_offset_by_id(14,conf_buf);
 		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
 		for(uint16_t i=0;i<4096;i++) {
 			conf_buf[i] = bt816_mem_read8(i);
 		}

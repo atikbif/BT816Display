@@ -30,6 +30,8 @@ extern ertc_time_type dev_time;
 
 uint32_t net_reg_names_addr = 0;
 uint16_t net_reg_names_cnt = 0;
+uint32_t net_bit_names_addr = 0;
+uint16_t net_bit_names_cnt = 0;
 
 uint8_t conf_buf[4096];
 
@@ -61,6 +63,7 @@ const char* man_var_names[MAN_VAR_CNT] = {
 void read_config() {
 
 	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
 	for(uint16_t i=0;i<4096;i++) {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
@@ -68,6 +71,7 @@ void read_config() {
 	if(check_config_header(conf_buf)) {
 		uint32_t addr = get_config_offset_by_id(0,conf_buf);
 		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
 		for(uint16_t i=0;i<4096;i++) {
 			conf_buf[i] = bt816_mem_read8(i);
 		}
@@ -96,12 +100,14 @@ void read_config() {
 	}
 
 	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
 	for(uint16_t i=0;i<4096;i++) {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
 	if(check_config_header(conf_buf)) {
 		uint32_t addr = get_config_offset_by_id(10,conf_buf);
 		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
 		for(uint16_t i=0;i<4096;i++) {
 			conf_buf[i] = bt816_mem_read8(i);
 		}
@@ -111,18 +117,38 @@ void read_config() {
 	}
 
 	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
 	for(uint16_t i=0;i<4096;i++) {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
 	if(check_config_header(conf_buf)) {
 		uint32_t addr = get_config_offset_by_id(5,conf_buf);
 		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
 		for(uint16_t i=0;i<4096;i++) {
 			conf_buf[i] = bt816_mem_read8(i);
 		}
 		if(check_item_config(conf_buf, 5)) {
 			net_reg_names_addr = 4096 + addr + 64;
 			net_reg_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		}
+	}
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(7,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 7)) {
+			net_bit_names_addr = 4096 + addr + 64;
+			net_bit_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
 		}
 	}
 
@@ -289,13 +315,6 @@ uint16_t get_out_cnt_with_descr(uint8_t dev_num) {
 }
 
 uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf) {
-	const char msg1[] = "P1 PSW TMR";
-	const char msg2[] = "MULTI_MOTOR";
-	const char msg3[] = "POST START";
-	const char msg4[] = "RUN UP TIME";
-	const char msg5[] = "CONT USED";
-	const char msg6[] = "CONT IN";
-	const char msg7[] = "CONT OUT";
 	uint8_t res = 0;
 
 	if(net_reg_names_addr && (num < net_reg_names_cnt)) {
@@ -309,90 +328,35 @@ uint8_t get_glob_integer_name(uint16_t num, uint8_t *buf) {
 		memcpy(buf,user_name,sizeof(user_name));
 		res = strlen(user_name);
 	}
-
-//	switch(num) {
-//		case 0:
-//			memcpy(buf,msg1,sizeof(msg1));
-//			res = strlen(msg1);
-//			break;
-//		case 1:
-//			memcpy(buf,msg2,sizeof(msg2));
-//			res = strlen(msg2);
-//			break;
-//		case 2:
-//			memcpy(buf,msg3,sizeof(msg3));
-//			res = strlen(msg3);
-//			break;
-//		case 3:
-//			memcpy(buf,msg4,sizeof(msg4));
-//			res = strlen(msg4);
-//			break;
-//		case 4:
-//			memcpy(buf,msg5,sizeof(msg5));
-//			res = strlen(msg5);
-//			break;
-//		case 5:
-//			memcpy(buf,msg6,sizeof(msg6));
-//			res = strlen(msg6);
-//			break;
-//		case 6:
-//			memcpy(buf,msg7,sizeof(msg7));
-//			res = strlen(msg7);
-//			break;
-//	}
 	return res;
 }
 
 uint8_t get_glob_bits_name(uint16_t num, uint8_t *buf) {
-	const char msg1[] = "P1 LOCKOUT";
-	const char msg2[] = "P1 OPEN CIRC";
-	const char msg3[] = "P1 SHORT CIRC";
-	const char msg4[] = "P1 CLEAR";
-	const char msg5[] = "P1 PSW FAILED";
-	const char msg6[] = "P1 SCADA STOP";
-	const char msg7[] = "P1 CONT FAIL";
 	uint8_t res = 0;
-	switch(num) {
-		case 0:
-			memcpy(buf,msg1,sizeof(msg1));
-			res = strlen(msg1);
-			break;
-		case 1:
-			memcpy(buf,msg2,sizeof(msg2));
-			res = strlen(msg2);
-			break;
-		case 2:
-			memcpy(buf,msg3,sizeof(msg3));
-			res = strlen(msg3);
-			break;
-		case 3:
-			memcpy(buf,msg4,sizeof(msg4));
-			res = strlen(msg4);
-			break;
-		case 4:
-			memcpy(buf,msg5,sizeof(msg5));
-			res = strlen(msg5);
-			break;
-		case 5:
-			memcpy(buf,msg6,sizeof(msg6));
-			res = strlen(msg6);
-			break;
-		case 6:
-			memcpy(buf,msg7,sizeof(msg7));
-			res = strlen(msg7);
-			break;
+	if(net_bit_names_addr && (num < net_bit_names_cnt)) {
+		uint8_t user_name[41];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, net_bit_names_addr+64+128ul*num, 64);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<40;i++) {
+			user_name[i] = bt816_mem_read8(i);
+		}
+		memcpy(buf,user_name,sizeof(user_name));
+		res = strlen(user_name);
 	}
 	return res;
 }
 
 void read_calculation_config(const uint8_t *ptr) {
 	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
 	for(uint16_t i=0;i<4096;i++) {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
 	if(check_config_header(conf_buf)) {
 		uint32_t addr = get_config_offset_by_id(9,conf_buf);
 		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
 		for(uint16_t i=0;i<4096;i++) {
 			conf_buf[i] = bt816_mem_read8(i);
 		}

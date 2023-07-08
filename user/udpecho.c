@@ -81,6 +81,7 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 								if(tmp==BLOCK_SIZE/PACKET_DATA_SIZE-1) {
 									bt816_cmd_memwrite(0,BLOCK_SIZE,(uint8_t*)fl_buf);
 									bt816_cmd_flashupdate(addr,0,BLOCK_SIZE);
+									vTaskDelay(1);
 								}
 								udp_tx[8] = 1; // success
 								res = 9;
@@ -99,6 +100,7 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 						cnt = ((uint16_t)rx[12]<<8) | rx[13];	// length
 						if(prog_mode_flag) {
 							bt816_cmd_flashread(0, addr, cnt);
+							vTaskDelay(1);
 							udp_tx[8] = 1; // success
 							for(i=0;i<cnt;i++) {
 								udp_tx[9+i] = bt816_mem_read8(i);
