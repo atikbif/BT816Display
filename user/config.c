@@ -32,6 +32,8 @@ uint32_t net_reg_names_addr = 0;
 uint16_t net_reg_names_cnt = 0;
 uint32_t net_bit_names_addr = 0;
 uint16_t net_bit_names_cnt = 0;
+uint32_t edit_var_addr = 0;
+uint32_t edit_var_cnt = 0;
 
 uint8_t conf_buf[4096];
 
@@ -149,6 +151,24 @@ void read_config() {
 		if(check_item_config(conf_buf, 7)) {
 			net_bit_names_addr = 4096 + addr + 64;
 			net_bit_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		}
+	}
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(15,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 15)) {
+			edit_var_addr = 4096 + addr + 64;
+			edit_var_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
 		}
 	}
 
@@ -424,29 +444,46 @@ void read_password() {
 
 uint8_t get_manage_var(uint16_t i, manage_var *var) {
 	uint8_t res = 0;
-	if(i<MAN_VAR_CNT) {
-		res = 1;
-		for(uint16_t j=0;j<40;j++) var->name[j] = 0;
-		for(uint16_t j=0;j<40;j++) {
-			if(j<strlen(man_var_names[i])) var->name[j] = man_var_names[i][j];
+	if(edit_var_addr && i<edit_var_cnt) {
+
+		uint8_t user_name[41];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, edit_var_addr+64ul*i, 64);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<40;i++) {
+			user_name[i] = bt816_mem_read8(i);
 		}
-		if(i<5) {
-			var->link_type = VAR_LINK_CL_REG;
-			var->link_index = i+10;
-			var->min = 0;
-			var->max = 15000;
-		}else if(i<10) {
-			var->link_type = VAR_LINK_CL_BIT;
-			var->link_index = i-5;
-			var->min = 0;
-			var->max = 1;
-		}else {
-			var->link_type = VAR_LINK_NET_BIT;
-			var->link_index = i-10;
-			var->min = 0;
-			var->max = 1;
+		memcpy(var->name,user_name,sizeof(user_name));
+		uint8_t link_type = bt816_mem_read8(40);
+
+		switch(link_type) {
+			case 0:
+				var->link_type = VAR_LINK_CL_BIT;
+				break;
+			case 1:
+				var->link_type = VAR_LINK_CL_REG;
+				break;
+			case 2:
+				var->link_type = VAR_LINK_NET_BIT;
+				break;
+			case 3:
+				var->link_type = VAR_LINK_NET_REG;
+				break;
 		}
-		var->var_cnt = MAN_VAR_CNT;
+
+		var->link_index = bt816_mem_read8(41);
+		var->link_index = var->link_index << 8;
+		var->link_index |= bt816_mem_read8(42);
+
+		var->min = bt816_mem_read8(43);
+		var->min = var->min << 8;
+		var->min |= bt816_mem_read8(44);
+
+		var->max = bt816_mem_read8(45);
+		var->max = var->max << 8;
+		var->max |= bt816_mem_read8(46);
+
+		var->var_cnt = edit_var_cnt;
 		var->value = 0;
 		switch(var->link_type) {
 			case VAR_LINK_CL_REG:
@@ -462,6 +499,8 @@ uint8_t get_manage_var(uint16_t i, manage_var *var) {
 				if(var->link_index<NET_BITS_CNT) var->value = cl.net_bits[var->link_index];
 				break;
 		}
+
+		res = 1;
 	}
 	return res;
 }

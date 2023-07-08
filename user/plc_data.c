@@ -30,27 +30,41 @@ uint8_t plc_can_addr = 0;
 
 extern cluster cl;
 
-
-void init_plc_data() {
+void reset_plc_data() {
 	for(uint16_t i=0;i<DI_CNT;i++) {
 		plc_di_state[i] = DI_OFF;
-		plc_di_type[i] = DI_UNUSED;
+		plc_ain_raw[i] = 0;
+		cl.pc21.din[i].state = 0;
+		cl.pc21.ain[i].value = 0;
 	}
 	for(uint16_t i=0;i<DO_CNT;i++) {
+		cl.pc21.dout[i].state = 0;
 		plc_do_state[i] = DO_OFF;
 	}
 	for(uint16_t i=0;i<CLUST_BITS_CNT;i++) {
+		cl.cluster_bits[i] = 0;
 		plc_clust_bits[i] = 0;
 	}
 	for(uint16_t i=0;i<CLUSTER_REGS_CNT;i++) {
+		cl.cluster_regs[i] = 0;
 		plc_clust_regs[i] = 0;
 	}
 	for(uint16_t i=0;i<NET_BITS_CNT;i++) {
+		cl.net_bits[i] = 0;
 		plc_net_bits[i] = 0;
 	}
 	for(uint16_t i=0;i<NET_REGS_CNT;i++) {
+		cl.net_regs[i] = 0;
 		plc_net_regs[i] = 0;
 	}
+}
+
+
+void init_plc_data() {
+	for(uint16_t i=0;i<DI_CNT;i++) {
+		plc_di_type[i] = DI_UNUSED;
+	}
+	reset_plc_data();
 }
 
 

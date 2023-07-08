@@ -195,6 +195,7 @@ void network_task_function(void *pvParameters)
 			hb_cnt = 0;
 			plc_can_link = 0;
 			cluster_data.plc_link[0] = 0;
+			reset_plc_data();
 		}
 		if(rst_flag) {
 			if(rst_tmr) rst_tmr--;

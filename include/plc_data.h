@@ -40,6 +40,7 @@ typedef struct  {
 }calc_config;
 
 void init_plc_data();
+void reset_plc_data();
 void read_calculation_config(const uint8_t *ptr);
 void plc_data_calculate();
 void imitate_plc_data();

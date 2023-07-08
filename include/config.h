@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 typedef struct{
-	uint8_t name[40];
+	uint8_t name[41];
 	uint32_t min;
 	uint32_t max;
 	uint32_t value;
