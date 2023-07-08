@@ -74,7 +74,7 @@ void plc_data_calculate() {
 		int32_t source_data = 0;
 		switch(calc[i].link) {
 			case LINK_RAW:
-				if(calc[i].index<AI_CNT) source_data = cl.pc21.ain[calc[i].index].value;
+				if(calc[i].index<AI_CNT) source_data = cl.pc21.ain[calc[i].index].raw;
 				break;
 			case LINK_2RAW:
 				if(calc[i].index<AI_CNT-1) {

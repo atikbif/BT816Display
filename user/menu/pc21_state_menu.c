@@ -32,7 +32,7 @@ static void print_ai_value(uint16_t x, uint16_t y, uint8_t font, uint8_t num) {
 	val[0] = calc[num].result;
 	switch(calc[num].prec) {
 		case PR0:
-			bt816_cmd_text_var(x, x, font, OPT_FORMAT, "%d", 1, val);
+			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d", 1, val);
 			break;
 		case PR1:
 			val[1] = val[0]%10;

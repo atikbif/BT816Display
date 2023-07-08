@@ -33,7 +33,9 @@ uint16_t net_reg_names_cnt = 0;
 uint32_t net_bit_names_addr = 0;
 uint16_t net_bit_names_cnt = 0;
 uint32_t edit_var_addr = 0;
-uint32_t edit_var_cnt = 0;
+uint16_t edit_var_cnt = 0;
+uint32_t conf_ai_addr = 0;
+uint16_t conf_ai_cnt = 0;
 
 uint8_t conf_buf[4096];
 
@@ -172,6 +174,24 @@ void read_config() {
 		}
 	}
 
+	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(2,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 2)) {
+			conf_ai_addr = 4096 + addr + 64;
+			conf_ai_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		}
+	}
+
 	cluster_data.used_plc[0]=1;
 	cluster_data.used_plc[1]=0;
 	cluster_data.used_plc[3]=0;
@@ -213,12 +233,20 @@ uint8_t get_net_bit_name(uint16_t num, uint8_t *buf) {
 }
 
 uint8_t get_ai_meas_unit(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
-	buf[0] = 'p';
-	buf[1] = 'p';
-	buf[2] = 'm';
-	buf[3] = 0;
+	uint8_t res = 0;
 
-	return 3;
+	if(conf_ai_addr && (inp_num < conf_ai_cnt)) {
+		uint8_t user_name[21];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, conf_ai_addr+128ul*inp_num, 128);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<20;i++) {
+			user_name[i] = bt816_mem_read8(i+80); // 80 - measure unit nam offset
+		}
+		memcpy(buf,user_name,sizeof(user_name));
+		res = strlen(user_name);
+	}
+	return res;
 }
 
 uint8_t get_inp_name(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
