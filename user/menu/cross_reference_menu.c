@@ -50,13 +50,8 @@ void cross_reference_menu(uint16_t key) {
 	uint8_t num = 0;
 	for(int i=0;i<PC21_INP_CNT;i++) {
 		for(int j=0;j<sizeof(rec_buf);j++) rec_buf[j]=0;
-		uint16_t length = get_inp_description(1, i, rec_buf);
+		uint16_t length = get_inp_description(1, i, rec_buf, io_buf);
 		if(length) {
-			for(int j=0;j<sizeof(io_buf);j++) io_buf[j] = 0;
-			io_buf[0] = '1';
-			io_buf[1] = 'D';
-			io_buf[2] = (i+1)/10 + '0';
-			io_buf[3] = (i+1)%10 + '0';
 			if(num>=first_visible_record && (num<(first_visible_record+max_records_cnt))) {
 				bt816_cmd_text(50, 95+(num-first_visible_record)*30, 1, 0, rec_buf);
 				bt816_cmd_text(350, 95+(num-first_visible_record)*30, 1, 0, io_buf);

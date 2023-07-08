@@ -28,7 +28,7 @@ uint8_t get_net_bit_name(uint16_t num, uint8_t *buf);
 uint8_t get_ai_meas_unit(uint8_t dev_num, uint8_t inp_num, uint8_t *buf);
 uint8_t get_inp_name(uint8_t dev_num, uint8_t inp_num, uint8_t *buf);
 void read_calculation_config(const uint8_t *ptr);
-uint8_t get_inp_description(uint8_t dev_num, uint8_t inp_num, uint8_t *buf);
+uint8_t get_inp_description(uint8_t dev_num, uint8_t inp_num, uint8_t *name_buf, uint8_t *descr_buf);
 uint16_t get_inp_cnt_with_descr(uint8_t dev_num);
 uint16_t get_out_cnt_with_descr(uint8_t dev_num);
 uint8_t get_out_description(uint8_t dev_num, uint8_t out_num, uint8_t *buf);
