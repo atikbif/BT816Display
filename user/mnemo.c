@@ -238,6 +238,12 @@ void mnemo_draw_filled_circle(const uint8_t *ptr) {
 }
 
 void mnemo_draw_text(const uint8_t *ptr) {
+
+//	bt816_cmd_setfont2(1,MEM_FONT14,0);
+//	bt816_cmd_setfont2(2,MEM_FONT22,0);
+//	bt816_cmd_setfont2(3,MEM_FONT30,0);
+//	bt816_cmd_setfont2(4,MEM_FONT40,0);
+
 	uint16_t id = ((uint16_t)ptr[0]<<8)|ptr[1];
 	if(id==MNEMO_ID_TEXT) {
 		uint8_t ver = ptr[2];
@@ -322,6 +328,12 @@ void mnemo_draw_progress(const uint8_t *ptr) {
 }
 
 void mnemo_draw_text_var(const uint8_t *ptr) {
+
+//	bt816_cmd_setfont2(1,MEM_FONT14,0);
+//	bt816_cmd_setfont2(2,MEM_FONT22,0);
+//	bt816_cmd_setfont2(3,MEM_FONT30,0);
+//	bt816_cmd_setfont2(4,MEM_FONT40,0);
+
 	uint16_t id = ((uint16_t)ptr[0]<<8)|ptr[1];
 	if(id==MNEMO_ID_TEXT_VAR) {
 		uint8_t ver = ptr[2];
@@ -528,6 +540,8 @@ void mnemo_draw_lamp(const uint8_t *ptr) {
 				break;
 		}
 
+		//bt816_cmd_inflate(MEM_LAMP1, get_lamp_picture_data(LAMP_GRAY), get_lamp_picture_size(LAMP_GRAY));
+
 		if(value) mnemo_draw_lamp_image(x_pos,y_pos,on_color);
 		else mnemo_draw_lamp_image(x_pos,y_pos,off_color);
 	}
@@ -545,6 +559,7 @@ static uint16_t mnemo_get_elements_cnt() {
 
 void mnemo_draw_lamp_image(uint16_t x, uint16_t y, enum LAMP_COL col) {
 	uint8_t correct = 0;
+	bt816_cmd_dl(DL_COLOR_RGB | WHITE);
 	switch(col) {
 		case LAMP_GRAY:
 			bt816_cmd_setbitmap(MEM_LAMP1, BT816_ARGB4, 50, 50);
@@ -609,139 +624,6 @@ void mnemo_draw_element(uint16_t conf_addr) {
 			mnemo_draw_filled_circle(&mnemo_buf[conf_addr]);
 			break;
 	}
-//	switch(elem_num) {
-//		case 0:
-//			if(mnemo_num==0) {
-//				bt816_cmd_setbitmap(0x800000 | (8192/32), BT816_COMPRESSED_RGBA_ASTC_10x10_KHR, 800, 480);
-//				bt816_cmd_dl(DL_BEGIN | BT816_BITMAPS);
-//				bt816_cmd_dl(VERTEX2F(0, 0));
-//				bt816_cmd_dl(DL_END);
-//			}else if(mnemo_num==1) {
-//				bt816_cmd_setbitmap(0x800000 | (69632/32), BT816_COMPRESSED_RGBA_ASTC_10x10_KHR, 800, 480);
-//				bt816_cmd_dl(DL_BEGIN | BT816_BITMAPS);
-//				bt816_cmd_dl(VERTEX2F(0, 0));
-//				bt816_cmd_dl(DL_END);
-//			}
-//			break;
-//		case 1:
-//			mnemo_draw_lamp_image(50,50,LAMP_GRAY);
-//			break;
-//		case 2:
-//			mnemo_draw_lamp_image(150,50,LAMP_RED);
-//			break;
-//		case 3:
-//			mnemo_draw_lamp_image(250,50,LAMP_BLUE);
-//			break;
-//		case 4:
-//			mnemo_draw_lamp_image(350,50,LAMP_YELLOW);
-//			break;
-//		case 5:
-//			mnemo_draw_lamp_image(450,50,LAMP_GREEN);
-//			break;
-//		case 6:
-//			mnemo_draw_lamp_image(550,50,LAMP_YELLOW);
-//			break;
-//		case 7:
-//			mnemo_draw_lamp_image(650,50,LAMP_BLUE);
-//			break;
-//		case 8:
-//			mnemo_draw_lamp_image(50,150,LAMP_RED);
-//			break;
-//		case 9:
-//			mnemo_draw_lamp_image(150,150,LAMP_GRAY);
-//			break;
-//		case 10:
-//			mnemo_draw_lamp_image(250,150,LAMP_RED);
-//			break;
-//		case 11:
-//			mnemo_draw_lamp_image(350,150,LAMP_BLUE);
-//			break;
-//		case 12:
-//			mnemo_draw_lamp_image(450,150,LAMP_YELLOW);
-//			break;
-//		case 13:
-//			mnemo_draw_lamp_image(550,150,LAMP_GREEN);
-//			break;
-//		case 14:
-//			mnemo_draw_lamp_image(650,150,LAMP_GRAY);
-//			break;
-//		case 15:
-//			mnemo_draw_lamp_image(50,250,LAMP_GREEN);
-//			break;
-//		case 16:
-//			mnemo_draw_lamp_image(150,250,LAMP_YELLOW);
-//			break;
-//		case 17:
-//			mnemo_draw_lamp_image(250,250,LAMP_BLUE);
-//			break;
-//		case 18:
-//			mnemo_draw_lamp_image(350,250,LAMP_RED);
-//			break;
-//		case 19:
-//			mnemo_draw_lamp_image(450,250,LAMP_GRAY);
-//			break;
-//		case 20:
-//			mnemo_draw_lamp_image(550,250,LAMP_RED);
-//			break;
-//		case 21:
-//			mnemo_draw_lamp_image(650,250,LAMP_BLUE);
-//			break;
-//		case 22:
-//			mnemo_draw_lamp_image(50,350,LAMP_YELLOW);
-//			break;
-//		case 23:
-//			mnemo_draw_lamp_image(150,350,LAMP_GREEN);
-//			break;
-//		case 24:
-//			mnemo_draw_lamp_image(250,350,LAMP_GRAY);
-//			break;
-//		case 25:
-//			mnemo_draw_lamp_image(350,350,LAMP_GREEN);
-//			break;
-//		case 26:
-//			mnemo_draw_lamp_image(450,350,LAMP_YELLOW);
-//			break;
-//		case 27:
-//			mnemo_draw_lamp_image(550,350,LAMP_BLUE);
-//			break;
-//		case 28:
-//			mnemo_draw_lamp_image(650,350,LAMP_RED);
-//			break;
-//		case 29:
-//			bt816_cmd_setfont2(1,MEM_L1FONT14,32);
-//			bt816_cmd_setfont2(2,MEM_L1FONT22,32);
-//			bt816_cmd_setfont2(3,MEM_L1FONT30,32);
-//			bt816_cmd_setfont2(4,MEM_L1FONT40,32);
-//			break;
-//		case 30:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(50, 100, 1, 0, "B01");
-//			break;
-//		case 31:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(150, 100, 2, 0, "B02");
-//			break;
-//		case 32:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(250, 100, 3, 0, "B03");
-//			break;
-//		case 33:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(350, 100, 4, 0, "B04");
-//			break;
-//		case 34:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(450, 100, 3, 0, "B05");
-//			break;
-//		case 35:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(550, 100, 2, 0, "B06");
-//			break;
-//		case 36:
-//			bt816_cmd_dl(DL_COLOR_RGB | RED);
-//			bt816_cmd_text(650, 100, 1, 0, "B07");
-//			break;
-//	}
 }
 
 void init_mnemo() {
@@ -757,7 +639,7 @@ void init_mnemo() {
 	vTaskDelay(10);
 	bt816_cmd_inflate(MEM_LAMP5, get_lamp_picture_data(LAMP_GREEN), get_lamp_picture_size(LAMP_GREEN));
 	vTaskDelay(10);
-	mnemo_cnt = 2;
+	mnemo_cnt = 1;
 }
 
 void draw_mnemo() {

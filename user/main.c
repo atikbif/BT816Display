@@ -96,7 +96,7 @@ int main(void)
   rs485_1_send_data("Start\r\n",7);
   rs485_2_send_data("Start\r\n",7);
 
-
+  init_cur_time();
 
   /* enter critical */
   taskENTER_CRITICAL(); 
@@ -120,7 +120,7 @@ int main(void)
 
   if(xTaskCreate((TaskFunction_t )lcd_task_function,
 				 (const char*    )"LCD_task",
-				 (uint16_t       )(1024*1),
+				 (uint16_t       )(1024),
 				 (void*          )NULL,
 				 (UBaseType_t    )2,
 				 (TaskHandle_t*  )&lcd_handler) != pdPASS)
@@ -167,7 +167,6 @@ void network_task_function(void *pvParameters)
 	{
 		cnt++;
 		if(cnt%900==0) {
-			//imitate_plc_data();
 			at32_led_toggle(LED_POW);
 			send_heartbeat();
 			cur_long_time = time_to_uint32();

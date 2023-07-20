@@ -49,25 +49,6 @@ extern cluster cl;
 
 extern uint8_t lcd_can_addr;
 
-#define MAN_VAR_CNT		15
-const char* man_var_names[MAN_VAR_CNT] = {
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x31",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x32",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x33",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x34",
-		"\xd0\xa2\x20\xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x8f\x20\x35",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x31",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x32",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x33",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x34",
-		"\xd0\x9a\xd0\xbb\xd0\xb0\xd0\xbf\xd0\xb0\xd0\xbd\x20\x35",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x31",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x32",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x33",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x34",
-		"\xd0\x92\xd0\xb5\xd0\xbd\xd1\x82\xd0\xb8\xd0\xbb\xd1\x8f\xd1\x82\xd0\xbe\xd1\x80\x20\x35"
-};
-
 void read_config() {
 
 	bt816_cmd_flashread(0, 4096, 4096);
@@ -467,6 +448,105 @@ void read_calculation_config(const uint8_t *ptr) {
 		}
 	}
 
+}
+
+void read_ip_addr(uint8_t *ptr) {
+	if (ertc_bpr_data_read(ERTC_DT17) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT17, 0x1234);
+		ertc_bpr_data_write(ERTC_DT18, 0xC0A80102);
+		ertc_bpr_data_write(ERTC_DT19, 0xFFFFFF00);
+		ertc_bpr_data_write(ERTC_DT20, 0xC0A80101);
+	}
+	uint32_t val  = ertc_bpr_data_read(ERTC_DT18);
+	ptr[0] = (val>>24)&0xFF;
+	ptr[1] = (val>>16)&0xFF;
+	ptr[2] = (val>>8)&0xFF;
+	ptr[3] = (val>>0)&0xFF;
+}
+
+void read_ip_mask(uint8_t *ptr) {
+	if (ertc_bpr_data_read(ERTC_DT17) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT17, 0x1234);
+		ertc_bpr_data_write(ERTC_DT18, 0xC0A80102);
+		ertc_bpr_data_write(ERTC_DT19, 0xFFFFFF00);
+		ertc_bpr_data_write(ERTC_DT20, 0xC0A80101);
+	}
+	uint32_t val  = ertc_bpr_data_read(ERTC_DT19);
+	ptr[0] = (val>>24)&0xFF;
+	ptr[1] = (val>>16)&0xFF;
+	ptr[2] = (val>>8)&0xFF;
+	ptr[3] = (val>>0)&0xFF;
+}
+
+void read_ip_gate(uint8_t *ptr) {
+	if (ertc_bpr_data_read(ERTC_DT17) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT17, 0x1234);
+		ertc_bpr_data_write(ERTC_DT18, 0xC0A80102);
+		ertc_bpr_data_write(ERTC_DT19, 0xFFFFFF00);
+		ertc_bpr_data_write(ERTC_DT20, 0xC0A80101);
+	}
+	uint32_t val  = ertc_bpr_data_read(ERTC_DT20);
+	ptr[0] = (val>>24)&0xFF;
+	ptr[1] = (val>>16)&0xFF;
+	ptr[2] = (val>>8)&0xFF;
+	ptr[3] = (val>>0)&0xFF;
+}
+
+void set_ip_addr(uint8_t *ptr) {
+	if (ertc_bpr_data_read(ERTC_DT17) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT17, 0x1234);
+		ertc_bpr_data_write(ERTC_DT18, 0xC0A80102);
+		ertc_bpr_data_write(ERTC_DT19, 0xFFFFFF00);
+		ertc_bpr_data_write(ERTC_DT20, 0xC0A80101);
+	}
+	uint32_t val  = ptr[0];
+	val = val << 8;
+	val |= ptr[1];
+	val = val << 8;
+	val |= ptr[2];
+	val = val << 8;
+	val |= ptr[3];
+	ertc_bpr_data_write(ERTC_DT18, val);
+}
+
+void set_ip_mask(uint8_t *ptr) {
+	if (ertc_bpr_data_read(ERTC_DT17) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT17, 0x1234);
+		ertc_bpr_data_write(ERTC_DT18, 0xC0A80102);
+		ertc_bpr_data_write(ERTC_DT19, 0xFFFFFF00);
+		ertc_bpr_data_write(ERTC_DT20, 0xC0A80101);
+	}
+	uint32_t val  = ptr[0];
+	val = val << 8;
+	val |= ptr[1];
+	val = val << 8;
+	val |= ptr[2];
+	val = val << 8;
+	val |= ptr[3];
+	ertc_bpr_data_write(ERTC_DT19, val);
+}
+
+void set_ip_gate(uint8_t *ptr) {
+	if (ertc_bpr_data_read(ERTC_DT17) != 0x1234)
+	{
+		ertc_bpr_data_write(ERTC_DT17, 0x1234);
+		ertc_bpr_data_write(ERTC_DT18, 0xC0A80102);
+		ertc_bpr_data_write(ERTC_DT19, 0xFFFFFF00);
+		ertc_bpr_data_write(ERTC_DT20, 0xC0A80101);
+	}
+	uint32_t val  = ptr[0];
+	val = val << 8;
+	val |= ptr[1];
+	val = val << 8;
+	val |= ptr[2];
+	val = val << 8;
+	val |= ptr[3];
+	ertc_bpr_data_write(ERTC_DT20, val);
 }
 
 void read_password() {

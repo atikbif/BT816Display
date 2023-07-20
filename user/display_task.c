@@ -26,6 +26,8 @@
 
 extern cluster cl;
 
+volatile uint8_t err_str[128];
+
 void lcd_task_function(void *pvParameters)
 {
 	uint16_t prev_key = 0;
@@ -40,7 +42,6 @@ void lcd_task_function(void *pvParameters)
 
 	can1_init();
 	init_cluster(&cl);
-	init_cur_time();
 	init_trends();
 
 	uint8_t try = 0;
@@ -62,6 +63,10 @@ void lcd_task_function(void *pvParameters)
 
 		uint32_t space = bt816_mem_read32(REG_CMDB_SPACE);
 		if((space & 0x3) != 0) {
+
+
+			for(uint8_t i=0;i<128;i++) err_str[i] =	bt816_mem_read8(RAM_ERR_REPORT+i);
+
 			bt816_mem_write8(REG_CPURESET, 1);   /* hold co-processor engine in the reset condition */
 			bt816_mem_write16(REG_CMD_READ, 0);  /* set REG_CMD_READ to 0 */
 			bt816_mem_write16(REG_CMD_WRITE, 0); /* set REG_CMD_WRITE to 0 */

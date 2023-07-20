@@ -37,6 +37,8 @@
 #include "at32_emac.h"
 #include "tcpip.h"
 
+#include "config.h"
+
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 #define MAC_ADDR_LENGTH                  (6)
@@ -80,6 +82,10 @@ void tcpip_stack_init(void)
   gw.addr = 0;
 
 #else
+  read_ip_addr(local_ip);
+  read_ip_mask(local_mask);
+  read_ip_gate(local_gw);
+
   IP4_ADDR(&ipaddr, local_ip[0], local_ip[1], local_ip[2], local_ip[3]);
   IP4_ADDR(&netmask, local_mask[0], local_mask[1], local_mask[2], local_mask[3]);
   IP4_ADDR(&gw, local_gw[0], local_gw[1], local_gw[2], local_gw[3]);

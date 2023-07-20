@@ -43,4 +43,12 @@ uint32_t get_config_offset_by_id(uint16_t id, uint8_t *header);
 uint8_t check_item_config(uint8_t *ptr, uint16_t id);
 uint16_t get_item_conf_version(uint8_t *ptr);
 
+void read_ip_addr(uint8_t *ptr);
+void read_ip_mask(uint8_t *ptr);
+void read_ip_gate(uint8_t *ptr);
+void set_ip_addr(uint8_t *ptr);
+void set_ip_mask(uint8_t *ptr);
+void set_ip_gate(uint8_t *ptr);
+
+
 #endif /* INCLUDE_CONFIG_H_ */

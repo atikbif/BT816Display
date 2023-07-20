@@ -13,6 +13,7 @@
 #include "menu_list.h"
 #include "password_menu.h"
 #include "set_time_menu.h"
+#include "ip_config_menu.h"
 
 extern menu_list_t current_menu;
 
@@ -50,6 +51,9 @@ void config_menu(uint16_t key) {
 		case KEY_4:
 			set_passwd_cmd(PASSWORD_SET1);
 			current_menu = MENU_PASSWD;
+			break;
+		case KEY_5:
+			current_menu = MENU_IP_CONFIG;
 			break;
 	}
 }

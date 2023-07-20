@@ -42,6 +42,8 @@
 #include "delete_trend_menu.h"
 #include "edit_trend_menu.h"
 #include "draw_trend_menu.h"
+#include "ip_config_menu.h"
+#include "ip_set_menu.h"
 
 uint8_t prog_mode_flag = 0;
 
@@ -129,7 +131,8 @@ const f_ptr screen[] = {
 	trend_info_menu,delete_trend_info_menu,edit_trend_menu,draw_trend_menu,
 	help_menu,pc21_menu,mnemo_menu,manage_menu,diagn_menu,di_menu,
 	do_menu,ai_menu,clust_bits_menu,net_bits_menu,clust_regs_menu,net_regs_menu,
-	edit_u16_menu
+	edit_u16_menu,
+	ip_config_menu,ip_set_menu
 };
 
 menu_list_t current_menu = MENU_MAIN;
