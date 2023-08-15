@@ -138,6 +138,8 @@ void uart2_init(uint32_t baudrate);
 void rs485_1_send_data(uint8_t* buf, uint8_t cnt);
 void rs485_2_send_data(uint8_t* buf, uint8_t cnt);
 
+uint8_t get_di_state();
+
 /**
   * @}
   */

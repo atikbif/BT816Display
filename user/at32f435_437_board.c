@@ -161,6 +161,28 @@ void at32_board_init()
 
   	gpio_bits_reset(BT_PD_GPIO, BT_PD_PIN);
 
+  	crm_periph_clock_enable(CRM_GPIOF_PERIPH_CLOCK, TRUE);
+
+	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
+	gpio_init_struct.gpio_out_type  = GPIO_OUTPUT_PUSH_PULL;
+	gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
+	gpio_init_struct.gpio_pins = GPIO_PINS_3 | GPIO_PINS_4 | GPIO_PINS_5 | GPIO_PINS_6 | GPIO_PINS_7 | GPIO_PINS_8 | GPIO_PINS_9 | GPIO_PINS_10;
+	gpio_init_struct.gpio_pull = GPIO_PULL_DOWN;
+	gpio_init(GPIOF, &gpio_init_struct);
+
+}
+
+uint8_t get_di_state() {
+	uint8_t res = 0;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_10)==SET) res |= 0x01;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_9)==SET) res |= 0x02;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_8)==SET) res |= 0x04;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_7)==SET) res |= 0x08;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_6)==SET) res |= 0x10;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_5)==SET) res |= 0x20;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_4)==SET) res |= 0x40;
+	if(gpio_input_data_bit_read(GPIOF, GPIO_PINS_3)==SET) res |= 0x80;
+	return res;
 }
 
 /**
