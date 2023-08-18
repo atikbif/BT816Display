@@ -45,6 +45,7 @@
 #include "draw_trend_menu.h"
 #include "ip_config_menu.h"
 #include "ip_set_menu.h"
+#include "state_menu.h"
 
 uint8_t prog_mode_flag = 0;
 
@@ -126,6 +127,7 @@ uint8_t u16var_text[6]="     ";
 uint16_t var_x_pos = 0;
 
 const f_ptr screen[] = {
+	state_menu,
 	main_menu,appl_info_menu,cluster_state_menu,alarm_info_menu,passwd_menu,clear_alarms_menu,diagnostic_menu,
 	diagnostic_menu2,pc21_state_menu, cross_reference_menu, global_integers_menu, global_bits_menu,config_menu,
 	set_time_menu, system_confug_menu,edit_var_menu,prog_menu,trend_config_menu,add_trend_menu,
@@ -194,6 +196,10 @@ void main_menu(uint16_t key) {
 			prog_mode_flag = 1;
 			init_prog_menu();
 			current_menu = MENU_PROG;
+			break;
+		case KEY_LEFT:
+		case KEY_EXIT:
+			current_menu = MENU_STATE;
 			break;
 	}
 }
