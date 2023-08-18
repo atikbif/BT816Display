@@ -12,6 +12,7 @@
 #include "cluster_state.h"
 #include "cluster_state_menu.h"
 #include "trend_data.h"
+#include "can_tx_stack.h"
 
 uint8_t lcd_can_addr = 0x02;
 
@@ -76,6 +77,8 @@ struct can_packet_ext_id {
 #define CAN_HEADER_LENGTH	2		// SS EOID INTERN_ADDR
 #define CAN_EXT_HEADER_LENGTH	2		// addr, packet signature, num of subpacket (4 bits) and quantity of packets (4 bits), cmd
 
+#define CAN_TX_TMR_GAP	5
+
 struct can_packet {
 	uint16_t id;
 	uint8_t length;
@@ -84,6 +87,41 @@ struct can_packet {
 
 uint16_t can1_rx_tmr = 0;
 uint16_t can1_tx_tmr = 0;
+
+extern tx_stack can_tx_stack;
+
+uint32_t get_tx_mailboxes_free_level()
+{
+	uint32_t freelevel = 0U;
+	if(CAN1->tsts_bit.tm0ef) {freelevel++;}
+	if(CAN1->tsts_bit.tm1ef) {freelevel++;}
+	if(CAN1->tsts_bit.tm2ef) {freelevel++;}
+	return freelevel;
+}
+
+void can_write_from_stack() {
+	tx_stack_data packet;
+	uint8_t i = 0;
+	uint8_t try = 0;
+	if(can1_tx_tmr<CAN_TX_TMR_GAP) return;
+	while(get_tx_mailboxes_free_level()!=0) {
+		try++;
+		if(try>=10) return;
+		if(get_tx_can_packet(&can_tx_stack,&packet)) {
+			can1_tx_tmr = 0;
+			if(packet.length>8) continue;
+			can_tx_message_type tx_message_struct;
+			tx_message_struct.standard_id = packet.id;
+				tx_message_struct.extended_id = 0;
+				tx_message_struct.id_type = CAN_ID_STANDARD;
+				tx_message_struct.frame_type = CAN_TFT_DATA;
+				tx_message_struct.dlc = packet.length;
+				for(i=0;i<packet.length;++i) tx_message_struct.data[i] = packet.data[i];
+				can_message_transmit(CAN1, &tx_message_struct);
+//				can_led_tx.on_cmd = 1;
+		}else break;
+	}
+}
 
 static uint8_t is_packet_extended(uint32_t can_id) {
 	if((can_id & 0x07) == SRV_Channel) return 1;
@@ -275,84 +313,6 @@ void check_can_rx_data(can_rx_message_type *rx) {
 	}
 }
 
-void send_heartbeat() {
-	static uint8_t heartbeat_value = 1;
-
-	uint8_t transmit_mailbox;
-	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x01 | (lcd_can_addr<<3) | (cluster_addr << 7);
-	tx_message_struct.extended_id = 0;
-	tx_message_struct.id_type = CAN_ID_STANDARD;
-	tx_message_struct.frame_type = CAN_TFT_DATA;
-	tx_message_struct.dlc = 2;
-	tx_message_struct.data[0] = 0x49;
-	tx_message_struct.data[1] = heartbeat_value++;
-	transmit_mailbox = can_message_transmit(CAN1, &tx_message_struct);
-	//while(can_transmit_status_get(CAN1, (can_tx_mailbox_num_type)transmit_mailbox) != CAN_TX_STATUS_SUCCESSFUL);
-}
-
-void write_clust_bit(uint16_t num, uint8_t value) {
-	uint8_t transmit_mailbox;
-	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (plc_can_addr<<3) | (cluster_addr << 7);
-	tx_message_struct.extended_id = 0;
-	tx_message_struct.id_type = CAN_ID_STANDARD;
-	tx_message_struct.frame_type = CAN_TFT_DATA;
-	tx_message_struct.dlc = 4;
-	tx_message_struct.data[0] = 0x03;
-	tx_message_struct.data[1] = num+16;
-	if(value) tx_message_struct.data[2] = 0x01;
-	else tx_message_struct.data[2] = 0x00;
-	tx_message_struct.data[3] = 0x01;
-	transmit_mailbox = can_message_transmit(CAN1, &tx_message_struct);
-}
-
-void write_net_bit(uint16_t num, uint8_t value) {
-	uint8_t transmit_mailbox;
-	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (lcd_can_addr<<3) | (cluster_addr << 7);
-	tx_message_struct.extended_id = 0;
-	tx_message_struct.id_type = CAN_ID_STANDARD;
-	tx_message_struct.frame_type = CAN_TFT_DATA;
-	tx_message_struct.dlc = 4;
-	tx_message_struct.data[0] = 0x0E;
-	tx_message_struct.data[1] = cluster_addr*16+num+1;
-	if(value) tx_message_struct.data[2] = 0x01;
-	else tx_message_struct.data[2] = 0x00;
-	tx_message_struct.data[3] = 0x01;
-	transmit_mailbox = can_message_transmit(CAN1, &tx_message_struct);
-}
-
-void write_clust_reg(uint16_t num, uint16_t value) {
-	uint8_t transmit_mailbox;
-	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (lcd_can_addr<<3) | (cluster_addr << 7);
-	tx_message_struct.extended_id = 0;
-	tx_message_struct.id_type = CAN_ID_STANDARD;
-	tx_message_struct.frame_type = CAN_TFT_DATA;
-	tx_message_struct.dlc = 4;
-	tx_message_struct.data[0] = 0x06;
-	tx_message_struct.data[1] = num+17;
-	tx_message_struct.data[2] = plc_clust_regs[num]&0xFF;
-	tx_message_struct.data[3] = plc_clust_regs[num]>>8;
-	transmit_mailbox = can_message_transmit(CAN1, &tx_message_struct);
-}
-
-void write_net_reg(uint16_t num, uint16_t value) {
-	uint8_t transmit_mailbox;
-	can_tx_message_type tx_message_struct;
-	tx_message_struct.standard_id = 0x0400 | 0x07 | (lcd_can_addr<<3) | (cluster_addr << 7);
-	tx_message_struct.extended_id = 0;
-	tx_message_struct.id_type = CAN_ID_STANDARD;
-	tx_message_struct.frame_type = CAN_TFT_DATA;
-	tx_message_struct.dlc = 4;
-	tx_message_struct.data[0] = 0x0F;
-	tx_message_struct.data[1] = cluster_addr*16+num+1;
-	tx_message_struct.data[2] = plc_net_regs[num]&0xFF;
-	tx_message_struct.data[3] = plc_net_regs[num]>>8;
-	transmit_mailbox = can_message_transmit(CAN1, &tx_message_struct);
-}
-
 void can1_init(void) {
 	gpio_init_type gpio_init_struct;
 
@@ -386,7 +346,7 @@ void can1_init(void) {
 	can_base_struct.aed_enable = TRUE;
 	can_base_struct.prsf_enable = FALSE;
 	can_base_struct.mdrsel_selection = CAN_DISCARDING_FIRST_RECEIVED;
-	can_base_struct.mmssr_selection = CAN_SENDING_BY_ID;
+	can_base_struct.mmssr_selection = CAN_SENDING_BY_REQUEST;
 	can_base_init(CAN1, &can_base_struct);
 
 	/* can baudrate, set boudrate = pclk/(baudrate_div *(1 + bts1_size + bts2_size)) */

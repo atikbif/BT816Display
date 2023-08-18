@@ -15,6 +15,7 @@
 #include "var_link.h"
 #include <string.h>
 #include "can.h"
+#include "can_task.h"
 #include "menu_list.h"
 #include "appl_info_menu.h"
 #include "cluster_state_menu.h"

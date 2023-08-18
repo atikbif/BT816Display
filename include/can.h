@@ -12,10 +12,6 @@
 
 void can1_init(void);
 void can1_transmit_data(void);
-void send_heartbeat();
-void write_clust_bit(uint16_t num, uint8_t value);
-void write_net_bit(uint16_t num, uint8_t value);
-void write_clust_reg(uint16_t num, uint16_t value);
-void write_net_reg(uint16_t num, uint16_t value);
+void can_write_from_stack();
 
 #endif /* INCLUDE_CAN_H_ */

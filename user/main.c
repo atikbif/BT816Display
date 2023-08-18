@@ -41,6 +41,7 @@
 #include "config.h"
 #include "trend_data.h"
 #include "cluster_state_menu.h"
+#include "can_task.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -67,6 +68,7 @@ extern void tcpecho_init(void);
 TaskHandle_t network_handler;
 TaskHandle_t lcd_handler;
 TaskHandle_t key_handler;
+TaskHandle_t can_handler;
 
 volatile uint8_t rst_flag = 0;
 volatile uint16_t rst_tmr = 0;
@@ -80,71 +82,85 @@ void network_task_function(void *pvParameters);
   */
 int main(void)
 {
-  nvic_priority_group_config(NVIC_PRIORITY_GROUP_4);
-  
-  system_clock_config();
-  at32_board_init();
-  
-  at32_led_init(LED_POW);
-  at32_led_init(LED_ERR);
+	nvic_priority_group_config(NVIC_PRIORITY_GROUP_4);
+
+	system_clock_config();
+	at32_board_init();
+
+	at32_led_init(LED_POW);
+	at32_led_init(LED_ERR);
+
+
+	/* init usart1 */
+	uart1_init(115200);
+	uart2_init(115200);
+
+	rs485_1_send_data("Start\r\n",7);
+	rs485_2_send_data("Start\r\n",7);
+
+	init_cur_time();
+
+	/* enter critical */
+	taskENTER_CRITICAL();
 
   
-  /* init usart1 */
-  uart1_init(115200);
-  uart2_init(115200);
-  
-  rs485_1_send_data("Start\r\n",7);
-  rs485_2_send_data("Start\r\n",7);
+	if(xTaskCreate((TaskFunction_t )network_task_function,
+				 (const char*    )"Network_task",
+				 (uint16_t       )(1024*1),
+				 (void*          )NULL,
+				 (UBaseType_t    )2,
+				 (TaskHandle_t*  )&network_handler) != pdPASS)
+	{
+		rs485_1_send_data("Network task create error\r\n",27);
+		rs485_2_send_data("Network task create error\r\n",27);
+	}
+	else
+	{
+		rs485_1_send_data("Network task create OK\r\n",24);
+		rs485_2_send_data("Network task create OK\r\n",24);
+	}
 
-  init_cur_time();
-
-  /* enter critical */
-  taskENTER_CRITICAL(); 
-
-  
-  if(xTaskCreate((TaskFunction_t )network_task_function,     
-                 (const char*    )"Network_task",   
-                 (uint16_t       )(1024*1),
-                 (void*          )NULL,
-                 (UBaseType_t    )2,
-                 (TaskHandle_t*  )&network_handler) != pdPASS)
-  {
-	  rs485_1_send_data("Network task create error\r\n",27);
-	  rs485_2_send_data("Network task create error\r\n",27);
-  }        
-  else
-  {
-	  rs485_1_send_data("Network task create OK\r\n",24);
-	  rs485_2_send_data("Network task create OK\r\n",24);
-  }
-
-  if(xTaskCreate((TaskFunction_t )lcd_task_function,
+	if(xTaskCreate((TaskFunction_t )lcd_task_function,
 				 (const char*    )"LCD_task",
 				 (uint16_t       )(1024),
 				 (void*          )NULL,
 				 (UBaseType_t    )2,
 				 (TaskHandle_t*  )&lcd_handler) != pdPASS)
-  {
-	  rs485_1_send_data("LCD task create error\r\n",23);
-	  rs485_2_send_data("LCD task create error\r\n",23);
-  }else {
-	  rs485_1_send_data("LCD task create OK\r\n",20);
-	  rs485_2_send_data("LCD task create OK\r\n",20);
-  }
+	{
+		rs485_1_send_data("LCD task create error\r\n",23);
+		rs485_2_send_data("LCD task create error\r\n",23);
+	}else {
+		rs485_1_send_data("LCD task create OK\r\n",20);
+		rs485_2_send_data("LCD task create OK\r\n",20);
+	}
+
+	if(xTaskCreate((TaskFunction_t )keyboard_task_function,
+				 (const char*    )"KEY_task",
+				 (uint16_t       )(configMINIMAL_STACK_SIZE),
+				 (void*          )NULL,
+				 (UBaseType_t    )2,
+				 (TaskHandle_t*  )&key_handler) != pdPASS)
+	{
+		rs485_1_send_data("KEY task create error\r\n",23);
+		rs485_2_send_data("KEY task create error\r\n",23);
+	}else {
+		rs485_1_send_data("KEY task create OK\r\n",20);
+		rs485_2_send_data("KEY task create OK\r\n",20);
+	}
   
-  if(xTaskCreate((TaskFunction_t )keyboard_task_function,
-  				 (const char*    )"KEY_task",
+  	if(xTaskCreate((TaskFunction_t )can_task_function,
+  				 (const char*    )"CAN_task",
   				 (uint16_t       )(configMINIMAL_STACK_SIZE),
   				 (void*          )NULL,
   				 (UBaseType_t    )2,
-  				 (TaskHandle_t*  )&key_handler) != pdPASS)
-  {
-  	  rs485_1_send_data("KEY task create error\r\n",23);
-  	  rs485_2_send_data("KEY task create error\r\n",23);
-  }else {
-  	  rs485_1_send_data("KEY task create OK\r\n",20);
-  	  rs485_2_send_data("KEY task create OK\r\n",20);
-  }
+  				 (TaskHandle_t*  )&can_handler) != pdPASS)
+	{
+		rs485_1_send_data("CAN task create error\r\n",23);
+		rs485_2_send_data("CAN task create error\r\n",23);
+	}else {
+		rs485_1_send_data("CAN task create OK\r\n",20);
+		rs485_2_send_data("CAN task create OK\r\n",20);
+	}
 
   /* exit critical */            
   taskEXIT_CRITICAL();      
@@ -168,7 +184,6 @@ void network_task_function(void *pvParameters)
 		cnt++;
 		if(cnt%900==0) {
 			at32_led_toggle(LED_POW);
-			send_heartbeat();
 			cur_long_time = time_to_uint32();
 		}
 		if(get_io_names_flag) {
