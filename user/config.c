@@ -16,6 +16,7 @@
 #include "at32f435_437_board.h"
 #include "var_link.h"
 #include "cluster_state.h"
+#include "message_scaner.h"
 #include "crc.h"
 #include "bt816_cmd.h"
 #include "FreeRTOS.h"
@@ -24,6 +25,7 @@
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
 extern calc_config calc[MAX_CALC_CNT];
+extern struct bit_message_conf msg_conf[MAX_MSG_CNT];
 extern uint16_t calc_total_cnt;
 extern uint8_t passwd[6];
 extern ertc_time_type dev_time;
@@ -34,6 +36,8 @@ uint32_t net_bit_names_addr = 0;
 uint16_t net_bit_names_cnt = 0;
 uint32_t edit_var_addr = 0;
 uint16_t edit_var_cnt = 0;
+uint32_t message_var_addr = 0;
+uint32_t message_var_cnt = 0;
 uint32_t conf_ai_addr = 0;
 uint16_t conf_ai_cnt = 0;
 uint32_t inp_descr_addr = 0;
@@ -156,6 +160,24 @@ void read_config() {
 		if(check_item_config(conf_buf, 15)) {
 			edit_var_addr = 4096 + addr + 64;
 			edit_var_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		}
+	}
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(16,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 16)) {
+			message_var_addr = 4096 + addr + 64;
+			message_var_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
 		}
 	}
 
@@ -448,6 +470,42 @@ void read_calculation_config(const uint8_t *ptr) {
 		}
 	}
 
+}
+
+void read_message_conf() {
+	for(uint16_t i=0;i<MAX_MSG_CNT;i++) {
+		msg_conf[i].used = 0;
+		msg_conf[i].prev_value = 0;
+		msg_conf[i].value = 0;
+
+		if(message_var_addr && (i < message_var_cnt)) {
+			bt816_cmd_flashread(0, message_var_addr+64ul*i, 64);
+			vTaskDelay(1);
+			msg_conf[i].var_type = bt816_mem_read8(40);
+			msg_conf[i].var_index = bt816_mem_read8(41);
+			msg_conf[i].var_index = msg_conf[i].var_index << 8;
+			msg_conf[i].var_index |= bt816_mem_read8(42);
+			msg_conf[i].message_type = bt816_mem_read8(43);
+			msg_conf[i].used = 1;
+		}
+	}
+}
+
+uint8_t get_message_name(uint16_t num, uint8_t *buf) {
+	uint8_t res  = 0;
+	if(message_var_addr && num<message_var_cnt) {
+
+		uint8_t user_name[41];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, message_var_addr+64ul*num, 64);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<40;i++) {
+			user_name[i] = bt816_mem_read8(i);
+		}
+		memcpy(buf,user_name,sizeof(user_name));
+		res = strlen(user_name);
+	}
+	return res;
 }
 
 void read_ip_addr(uint8_t *ptr) {
