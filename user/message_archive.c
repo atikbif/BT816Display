@@ -185,9 +185,9 @@ uint8_t get_record_from_archive(uint16_t rec_num, struct message_record *rec) {
 	return 1;
 }
 
-void check_new_records_update() {
+void check_new_records_update(uint16_t step) {
 	static uint16_t archive_update_tmr = 0;
-	archive_update_tmr++;
+	archive_update_tmr+=step;
 	if(archive_update_tmr>=ARCH_UPDATE_PERIOD) {
 		archive_update_tmr = 0;
 		if(archive_new_record_flag) {

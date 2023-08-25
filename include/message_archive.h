@@ -34,6 +34,6 @@ void add_record_to_archive(struct message_record *rec);
 uint16_t get_archive_records_cnt();
 void clear_archive();
 uint8_t get_record_from_archive(uint16_t rec_num, struct message_record *rec);
-void check_new_records_update();
+void check_new_records_update(uint16_t step);
 
 #endif /* INCLUDE_MESSAGE_ARCHIVE_H_ */

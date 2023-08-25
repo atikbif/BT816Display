@@ -15,10 +15,14 @@
 #include "cluster_state.h"
 #include "config.h"
 #include "demo_design_menu.h"
+#include "message_scaner.h"
+#include "config.h"
 
 extern menu_list_t current_menu;
 
 void state_menu(uint16_t key) {
+
+	scan_messages();
 
 	bt816_cmd_dl(CMD_DLSTART); /* start the display list */
 	bt816_cmd_dl(DL_CLEAR_COLOR_RGB | BLACK);

@@ -23,6 +23,7 @@
 #include "trend_data.h"
 #include "cluster_state_menu.h"
 #include "bt816_spi.h"
+#include "message_archive.h"
 
 extern cluster cl;
 
@@ -57,6 +58,8 @@ void lcd_task_function(void *pvParameters)
 	read_password();
 	read_mnemo_data(mnemo_num);
 	init_menu();
+	init_archive();
+	read_message_conf();
 	while(1)
 	{
 		//draw_mnemo();
@@ -81,6 +84,7 @@ void lcd_task_function(void *pvParameters)
 		prev_key = cur_key;
 
 		display_menu(key_cmd);
+		check_new_records_update(100);
 		//demo_display_fonts();
 		vTaskDelay(100);
 	}
