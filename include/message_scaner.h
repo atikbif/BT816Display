@@ -23,5 +23,8 @@ struct bit_message_conf{
 
 void scan_messages();
 
+uint16_t get_active_messages_cnt();
+uint8_t get_message_by_number(uint8_t num, struct bit_message_conf *message, uint8_t *name_ptr);
+
 
 #endif /* INCLUDE_MESSAGE_SCANER_H_ */

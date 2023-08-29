@@ -50,7 +50,7 @@ uint8_t get_additional_alarm_info(uint32_t addr, uint8_t *buf) {
 	return 0;
 }
 
-uint8_t print_date(uint8_t *buf, time_info time) {
+static uint8_t print_date(uint8_t *buf, time_info time) {
 	buf[0]=time.hour/10+'0';
 	buf[1]=time.hour%10+'0';
 	buf[2]=':';

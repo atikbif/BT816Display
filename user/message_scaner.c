@@ -47,3 +47,50 @@ void scan_messages() {
 		}
 	}
 }
+
+uint16_t get_active_messages_cnt() {
+	uint16_t res = 0;
+
+	for(uint16_t i=0;i<MAX_MSG_CNT;i++) {
+		if(msg_conf[i].used) {
+			switch(msg_conf[i].var_type) {
+				case 0:
+					msg_conf[i].value = cl.cluster_bits[msg_conf[i].var_index];
+					break;
+				case 2:
+					msg_conf[i].value = cl.net_bits[msg_conf[i].var_index];
+					break;
+			}
+			if(msg_conf[i].value) {
+				res++;
+			}
+		}
+	}
+	return res;
+}
+
+uint8_t get_message_by_number(uint8_t num, struct bit_message_conf *message, uint8_t *name_ptr) {
+	uint8_t pos = 0;
+
+	for(uint16_t i=0;i<MAX_MSG_CNT;i++) {
+		if(msg_conf[i].used) {
+			switch(msg_conf[i].var_type) {
+				case 0:
+					msg_conf[i].value = cl.cluster_bits[msg_conf[i].var_index];
+					break;
+				case 2:
+					msg_conf[i].value = cl.net_bits[msg_conf[i].var_index];
+					break;
+			}
+			if(msg_conf[i].value) {
+				if(num==pos) {
+					*message = msg_conf[i];
+					get_message_name(i, name_ptr);
+					return 1;
+				}
+				pos++;
+			}
+		}
+	}
+	return 0;
+}

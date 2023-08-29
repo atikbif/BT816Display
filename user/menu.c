@@ -138,7 +138,7 @@ const f_ptr screen[] = {
 	ip_config_menu,ip_set_menu
 };
 
-menu_list_t current_menu = MENU_MAIN;
+menu_list_t current_menu = MENU_STATE;
 
 extern cluster cl;
 
