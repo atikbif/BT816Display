@@ -10,112 +10,78 @@
 #include "bt816_cmd.h"
 #include "FreeRTOS.h"
 #include "task.h"
-
-#define ARCH_HEADER_ID			(0x38A4)
-#define ARCH_REC_ID				(0x39A5)
-
-
-uint32_t archive_start_addr = 0x500000;
+#include "config.h"
 
 static uint8_t arch_buf[ARCHIVE_PAGE_SIZE];
-static uint8_t arch_page_num = 0;
+
 static uint8_t archive_new_record_flag = 0;
 
-static uint16_t arch_rec_cnt = 0;
-static uint16_t first_rec_pos = 0;
+static uint8_t ext_flash_used = 0;
+static uint8_t *first_rec_ptr = 0;
+static uint8_t *last_rec_ptr = 0;
 
-static uint32_t get_page_addr_by_rec_num(uint16_t rec_num) {
-	uint32_t res = archive_start_addr + ARCHIVE_PAGE_SIZE;
-	uint16_t real_rec_pos = (first_rec_pos + rec_num)%MAX_ARCHIVE_RECORDS_CNT;
-	uint32_t addition = (uint32_t)ARCHIVE_RECORD_LENGTH*(real_rec_pos);
-	addition -= (addition%ARCHIVE_PAGE_SIZE);
-	res += addition;
-	return res;
+static const char test_flash_ok[] = "\xd0\xa2\xd0\xb5\xd1\x81\xd1\x82\x20\x46\x6c\x61\x73\x68\x20\x2d\x20\xd1\x83\xd1\x81\xd0\xbf\xd0\xb5\xd1\x88\xd0\xbd\xd0\xbe";
+static const char test_flash_err[] = "\xd0\xa2\xd0\xb5\xd1\x81\xd1\x82\x20\x46\x6c\x61\x73\x68\x20\xd0\xbe\xd1\x88\xd0\xb8\xd0\xb1\xd0\xba\xd0\xb0";
+static const char can_link_err[] = "\xd0\x9f\xd0\x9b\xd0\x9a\x20\x43\x41\x4e\x20\xd0\xbe\xd1\x88\xd0\xb8\xd0\xb1\xd0\xba\xd0\xb0";
+
+static void save_archive() {
+
 }
 
-static uint32_t archive_get_current_page_address() {
-	uint32_t res = archive_start_addr + ARCHIVE_PAGE_SIZE;
-	if(arch_rec_cnt>MAX_ARCHIVE_RECORDS_CNT) arch_rec_cnt = 0;
-	if(first_rec_pos>=MAX_ARCHIVE_RECORDS_CNT) first_rec_pos = 0;
-	uint16_t last_rec_pos = (first_rec_pos + (arch_rec_cnt?(arch_rec_cnt-1):arch_rec_cnt))%MAX_ARCHIVE_RECORDS_CNT;
-	uint32_t addition = (uint32_t)ARCHIVE_RECORD_LENGTH*(last_rec_pos);
-	addition -= (addition%ARCHIVE_PAGE_SIZE);
-	res += addition;
+static void open_archive() {
+
+}
+
+static uint8_t check_record(uint8_t *ptr) {
+	uint8_t res = 0;
+	uint8_t length = ptr[7];
+	uint8_t crc_h = ptr[8];
+	uint8_t crc_l = ptr[9];
+	ptr[8] = 0;
+	ptr[9] = 0;
+	uint16_t crc = GetCRC16(ptr, ARCHIVE_RECORD_SYS_DATA_LENGTH + length);
+	if((((crc>>8)&0xFF)==crc_h) && (crc&0xFF==crc_l)) res = 1;
+	ptr[8] = crc_h;
+	ptr[9] = crc_l;
 	return res;
 }
 
 void init_archive() {
-	uint8_t check_flag = 1;
-	bt816_cmd_flashread(0, archive_start_addr, ARCHIVE_PAGE_SIZE);
-	vTaskDelay(1);
-	for(uint16_t i=0;i<ARCHIVE_HEADER_LENGTH;i++) {
-		arch_buf[i] = bt816_mem_read8(i);
-	}
-	if ((arch_buf[0]==(ARCH_HEADER_ID>>8)&0xFF)&&(arch_buf[1]==(ARCH_HEADER_ID&0xFF))) {
-		if(GetCRC16(arch_buf, ARCHIVE_HEADER_LENGTH)) check_flag = 0;
-		else {
-			arch_rec_cnt = arch_buf[2];
-			arch_rec_cnt = arch_rec_cnt << 8;
-			arch_rec_cnt |= arch_buf[3];
-			first_rec_pos = arch_buf[4];
-			first_rec_pos = first_rec_pos << 8;
-			first_rec_pos |= arch_buf[5];
-		}
-	}else check_flag = 0;
-	if(check_flag==0) {
-		clear_archive();
-	}else {
-		for(uint16_t i=0;i<ARCHIVE_PAGE_SIZE;i++) arch_buf[i] = 0;
-		if(arch_rec_cnt){
-			uint32_t addr = archive_get_current_page_address();
-			bt816_cmd_flashread(0, addr, ARCHIVE_PAGE_SIZE);
-			for(uint16_t i=0;i<ARCHIVE_PAGE_SIZE;i++) {
-				arch_buf[i] = bt816_mem_read8(i);
-			}
-		}
+	ext_flash_used = 0;
+	clear_archive();
+	if(ext_flash_used) {
+		open_archive();
 	}
 }
 
 void add_record_to_archive(struct message_record *rec) {
-	uint32_t prev_addr = archive_get_current_page_address();
-	arch_rec_cnt++;
-	if(arch_rec_cnt>MAX_ARCHIVE_RECORDS_CNT) {
-		arch_rec_cnt = MAX_ARCHIVE_RECORDS_CNT;
-		first_rec_pos++;
-		if(first_rec_pos>=MAX_ARCHIVE_RECORDS_CNT) first_rec_pos = 0;
-	}
-	uint32_t cur_addr = archive_get_current_page_address();
-	if(cur_addr!=prev_addr) {
-		bt816_cmd_memwrite(0,ARCHIVE_PAGE_SIZE,arch_buf);
-		vTaskDelay(1);
-		bt816_cmd_flashupdate(prev_addr,0,ARCHIVE_PAGE_SIZE);
-	}
-	uint16_t offset = ((first_rec_pos + (arch_rec_cnt-1))%MAX_ARCHIVE_RECORDS_CNT)*ARCHIVE_RECORD_LENGTH;
 
-	if(rec->length>ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH) {
-		rec->length = ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH;
+	uint16_t offset = 0;
+
+	if(last_rec_ptr==0) {
+		last_rec_ptr= &arch_buf[0];
+	}else {
+		offset+=ARCHIVE_RECORD_LENGTH;
+		if(offset>=ARCHIVE_PAGE_SIZE) {
+			if(ext_flash_used) save_archive();
+			offset = 0;
+		}
 	}
 
-	arch_buf[offset] = (ARCH_REC_ID>>8)&0xFF;
-	arch_buf[offset+1] = ARCH_REC_ID&0xFF;
-	arch_buf[offset+2] = (rec->time>>24)&0xFF;
-	arch_buf[offset+3] = (rec->time>>16)&0xFF;
-	arch_buf[offset+4] = (rec->time>>8)&0xFF;
-	arch_buf[offset+5] = (rec->time)&0xFF;
-	arch_buf[offset+6] = (rec->message_id>>8)&0xFF;
-	arch_buf[offset+7] = rec->message_id&0xFF;
-	arch_buf[offset+8] = rec->message_type;
-	arch_buf[offset+9] = (rec->length>>8)&0xFF;
-	arch_buf[offset+10] = (rec->length&0xFF);
-	arch_buf[offset+11] = 0; // crch place
-	arch_buf[offset+12] = 0; // crcl place
-
-	// add zero tail
-	uint16_t i = 13;
-	while(i<ARCHIVE_RECORD_SYS_DATA_LENGTH) {
-		arch_buf[offset+i] = 0;
-		i++;
+	if(rec->length > (ARCHIVE_RECORD_LENGTH - ARCHIVE_RECORD_SYS_DATA_LENGTH)) {
+		rec->length = ARCHIVE_RECORD_LENGTH - ARCHIVE_RECORD_SYS_DATA_LENGTH;
 	}
+
+	arch_buf[offset] = (rec->time>>24)&0xFF;
+	arch_buf[offset+1] = (rec->time>>16)&0xFF;
+	arch_buf[offset+2] = (rec->time>>8)&0xFF;
+	arch_buf[offset+3] = (rec->time)&0xFF;
+	arch_buf[offset+4] = (rec->message_id>>8)&0xFF;
+	arch_buf[offset+5] = rec->message_id&0xFF;
+	arch_buf[offset+6] = rec->message_type;
+	arch_buf[offset+7] = rec->length;
+	arch_buf[offset+8] = 0; // crch place
+	arch_buf[offset+9] = 0; // crcl place
 
 	for(uint16_t i=0;i<ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH;i++) {
 		if(i<rec->length) arch_buf[offset+ARCHIVE_RECORD_SYS_DATA_LENGTH+i] = rec->ptr[i];
@@ -123,80 +89,147 @@ void add_record_to_archive(struct message_record *rec) {
 	}
 
 	uint16_t crc = GetCRC16(&arch_buf[offset], ARCHIVE_RECORD_SYS_DATA_LENGTH + rec->length);
-	arch_buf[offset+11] = crc >> 8; 	// crch place
-	arch_buf[offset+12] = crc & 0xFF; 	// crcl place
+	arch_buf[offset+8] = crc >> 8; 	// crch place
+	arch_buf[offset+8] = crc & 0xFF; 	// crcl place
+
+	last_rec_ptr = &arch_buf[offset];
 
 	archive_new_record_flag = 1;
 }
 
 uint16_t get_archive_records_cnt() {
-	return arch_rec_cnt;
+	uint16_t res = 0;
+	uint8_t *ptr = last_rec_ptr;
+	if(ptr) {
+		while(check_record(ptr)) {
+			res++;
+			if(res>=MAX_ARCHIVE_RECORDS_CNT) break;
+			if(ptr>&arch_buf[0]) {
+				ptr-=ARCHIVE_RECORD_LENGTH;
+			}else {
+				ptr = &arch_buf[ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH];
+			}
+		}
+	}
+	return res;
+}
+
+uint8_t get_record_with_offset_from_last(uint16_t offset, struct message_record *rec) {
+	uint8_t *ptr = 0;
+	uint8_t res = 0;
+	if(last_rec_ptr) {
+		ptr = last_rec_ptr;
+		while(offset) {
+			if(ptr>&arch_buf[0]) {
+				ptr-=ARCHIVE_RECORD_LENGTH;
+			}else {
+				ptr = &arch_buf[ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH];
+			}
+			offset--;
+		}
+	}
+	if(ptr) {
+		uint8_t length = ptr[7];
+		if(length>ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH) return 0;
+		uint16_t crc = ptr[8];
+		crc = crc << 8;
+		crc |= ptr[9];
+		ptr[8] = 0;
+		ptr[9] = 0;
+		if(GetCRC16(ptr, ARCHIVE_RECORD_SYS_DATA_LENGTH+length)!=crc) return 0;
+		rec->length = length;
+		rec->time = ptr[0];
+		rec->time = rec->time<<8;
+		rec->time |= ptr[1];
+		rec->time = rec->time<<8;
+		rec->time |= ptr[2];
+		rec->time = rec->time<<8;
+		rec->time |= ptr[3];
+		rec->message_id = ptr[4];
+		rec->message_id = rec->message_id<<8;
+		rec->message_id |= ptr[5];
+		rec->message_type = ptr[6];
+		for(uint16_t i=0;i<length;i++) rec->ptr[i] = ptr[ARCHIVE_RECORD_SYS_DATA_LENGTH+i];
+		res = 1;
+	}
+	return res;
 }
 
 void clear_archive() {
-	for(uint16_t i=0;i<ARCHIVE_HEADER_LENGTH;i++) arch_buf[i] = 0;
-	arch_buf[0] = (ARCH_HEADER_ID>>8)&0xFF;
-	arch_buf[1] = ARCH_HEADER_ID&0xFF;
-	arch_rec_cnt = 0;
-	first_rec_pos = 0;
-	bt816_cmd_memwrite(0,ARCHIVE_HEADER_LENGTH,arch_buf);
-	vTaskDelay(1);
-	bt816_cmd_flashupdate(archive_start_addr,0,4096);
-	arch_page_num = 0;
 	archive_new_record_flag = 0;
+	first_rec_ptr = 0;
+	last_rec_ptr = 0;
 	for(uint16_t i=0;i<ARCHIVE_PAGE_SIZE;i++) arch_buf[i] = 0;
-}
-
-uint8_t get_record_from_archive(uint16_t rec_num, struct message_record *rec) {
-	uint8_t rec_buf[ARCHIVE_RECORD_LENGTH];
-	uint32_t addr = get_page_addr_by_rec_num(rec_num);
-	bt816_cmd_flashread(0, addr, ARCHIVE_PAGE_SIZE);
-	vTaskDelay(1);
-	uint16_t offset = 0;
-	for(uint16_t i=0;i<ARCHIVE_RECORD_SYS_DATA_LENGTH;i++) {
-		rec_buf[i] = bt816_mem_read8(offset + i);
-	}
-
-	if(rec_buf[0]!=(ARCH_REC_ID>>8)&0xFF) return 0;
-	if(rec_buf[1]!=ARCH_REC_ID&0xFF) return 0;
-	uint16_t length = rec_buf[9];
-	length = length<<8;
-	length |= rec_buf[10];
-	if(length>ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH) return 0;
-	uint16_t crc = rec_buf[11];
-	crc = crc << 8;
-	crc |= rec_buf[12];
-	rec_buf[11] = 0;
-	rec_buf[12] = 0;
-	if(GetCRC16(rec_buf, ARCHIVE_RECORD_SYS_DATA_LENGTH+length)!=crc) return 0;
-	rec->length = length;
-	rec->time = rec_buf[2];
-	rec->time = rec->time<<8;
-	rec->time |= rec_buf[3];
-	rec->time = rec->time<<8;
-	rec->time |= rec_buf[4];
-	rec->time = rec->time<<8;
-	rec->time |= rec_buf[5];
-	rec->message_id = rec_buf[6];
-	rec->message_id = rec->message_id<<8;
-	rec->message_id |= rec_buf[7];
-	rec->message_type = rec_buf[8];
-	for(uint16_t i=0;i<length;i++) rec->ptr[i] = rec_buf[ARCHIVE_RECORD_SYS_DATA_LENGTH+i];
-	return 1;
 }
 
 void check_new_records_update(uint16_t step) {
 	static uint16_t archive_update_tmr = 0;
-	archive_update_tmr+=step;
-	if(archive_update_tmr>=ARCH_UPDATE_PERIOD) {
-		archive_update_tmr = 0;
-		if(archive_new_record_flag) {
-			bt816_cmd_memwrite(0,ARCHIVE_PAGE_SIZE,arch_buf);
-			vTaskDelay(1);
-			uint32_t addr = archive_get_current_page_address();
-			bt816_cmd_flashupdate(addr,0,ARCHIVE_PAGE_SIZE);
-			archive_new_record_flag = 0;
+	if(ext_flash_used) {
+		archive_update_tmr+=step;
+		if(archive_update_tmr>=ARCH_UPDATE_PERIOD) {
+			archive_update_tmr = 0;
+			if(archive_new_record_flag) {
+				 save_archive();
+				archive_new_record_flag = 0;
+			}
 		}
 	}
+}
+
+uint16_t get_archive_record_message(struct message_record *rec, uint8_t *out_buf, uint16_t max_length) {
+	uint16_t res = 0;
+	uint16_t index = 0;
+	uint16_t i = 0;
+	for(i=0;i<max_length;i++) out_buf[i]=0;
+	switch(rec->message_id) {
+		case MSG_ARCH_CHECK_FLASH:
+			if(rec->ptr[0]) {
+				for(i=0;i<sizeof(test_flash_ok);i++) {
+					if(max_length && (i<(max_length-1))) {
+						out_buf[i] = test_flash_ok[i];
+						res++;
+					}
+				}
+			}else {
+				for(i=0;i<sizeof(test_flash_err);i++) {
+					if(max_length && (i<(max_length-1))) {
+						out_buf[i] = test_flash_err[i];
+						res++;
+					}
+				}
+			}
+			break;
+		case MSG_ARCH_CHECK_CAN:
+			if(rec->ptr[0]==0) {
+				for(i=0;i<sizeof(can_link_err);i++) {
+					if(max_length && (i<(max_length-1))) {
+						out_buf[i] = can_link_err[i];
+						res++;
+					}
+				}
+			}
+			break;
+		case MSG_ARCH_BIT:
+			if(rec->ptr[0]==1) {	// version
+				uint8_t bit_type = rec->ptr[1];
+				index = rec->ptr[2];
+				index = index << 8;
+				index |= rec->ptr[3];
+
+				if(rec->ptr[4]) {		// value
+					uint8_t bit_type = rec->ptr[1];
+					if(bit_type==0) {	// cluster bit
+						res = get_cluster_bit_name(index,out_buf,max_length);
+					}else if(bit_type==2) {	// net bit
+						res = get_net_bit_name(index,out_buf,max_length);
+					}
+				}
+			}
+			break;
+	}
+	if(max_length && (res>=max_length)) {
+		out_buf[max_length-1] = 0;
+	}
+	return res;
 }
 

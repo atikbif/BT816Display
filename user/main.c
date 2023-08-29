@@ -122,7 +122,7 @@ int main(void)
 
 	if(xTaskCreate((TaskFunction_t )lcd_task_function,
 				 (const char*    )"LCD_task",
-				 (uint16_t       )(1024),
+				 (uint16_t       )(1024*2),
 				 (void*          )NULL,
 				 (UBaseType_t    )2,
 				 (TaskHandle_t*  )&lcd_handler) != pdPASS)

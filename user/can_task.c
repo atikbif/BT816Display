@@ -48,8 +48,8 @@ static void update_di_data() {
 			update_di &= 0xFF00;
 			send_state = 0;
 			send_fault = 0;
-			di_tmr=0;
 		}
+		di_tmr=0;
 	}
 	prev_di = cur_di;
 }

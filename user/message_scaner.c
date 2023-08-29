@@ -27,7 +27,7 @@ void scan_messages() {
 					msg_conf[i].value = cl.net_bits[msg_conf[i].var_index];
 					break;
 			}
-			if(msg_conf[i].value!=msg_conf[i].prev_value && msg_conf[i].value) {
+			if((msg_conf[i].value!=msg_conf[i].prev_value) && msg_conf[i].value) {
 				// add message to archive
 				struct message_record rec;
 				rec.message_type = msg_conf[i].message_type;

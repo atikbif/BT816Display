@@ -21,10 +21,10 @@ typedef struct{
 }manage_var;
 
 void read_config();
-uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf); // return length
-uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf);
-uint8_t get_net_reg_name(uint16_t num, uint8_t *buf);
-uint8_t get_net_bit_name(uint16_t num, uint8_t *buf);
+uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length); // return length
+uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length);
+uint8_t get_net_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length);
+uint8_t get_net_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length);
 uint8_t get_ai_meas_unit(uint8_t dev_num, uint8_t inp_num, uint8_t *buf);
 uint8_t get_inp_name(uint8_t dev_num, uint8_t inp_num, uint8_t *buf);
 void read_calculation_config(const uint8_t *ptr);

@@ -34,6 +34,10 @@ uint32_t net_reg_names_addr = 0;
 uint16_t net_reg_names_cnt = 0;
 uint32_t net_bit_names_addr = 0;
 uint16_t net_bit_names_cnt = 0;
+uint32_t clust_reg_names_addr = 0;
+uint16_t clust_reg_names_cnt = 0;
+uint32_t clust_bit_names_addr = 0;
+uint16_t clust_bit_names_cnt = 0;
 uint32_t edit_var_addr = 0;
 uint16_t edit_var_cnt = 0;
 uint32_t message_var_addr = 0;
@@ -133,6 +137,24 @@ void read_config() {
 		conf_buf[i] = bt816_mem_read8(i);
 	}
 	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(6,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 6)) {
+			clust_reg_names_addr = 4096 + addr + 64;
+			clust_reg_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		}
+	}
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
 		uint32_t addr = get_config_offset_by_id(7,conf_buf);
 		bt816_cmd_flashread(0, 4096 + addr, 4096);
 		vTaskDelay(1);
@@ -142,6 +164,24 @@ void read_config() {
 		if(check_item_config(conf_buf, 7)) {
 			net_bit_names_addr = 4096 + addr + 64;
 			net_bit_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
+		}
+	}
+
+	bt816_cmd_flashread(0, 4096, 4096);
+	vTaskDelay(1);
+	for(uint16_t i=0;i<4096;i++) {
+		conf_buf[i] = bt816_mem_read8(i);
+	}
+	if(check_config_header(conf_buf)) {
+		uint32_t addr = get_config_offset_by_id(8,conf_buf);
+		bt816_cmd_flashread(0, 4096 + addr, 4096);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<4096;i++) {
+			conf_buf[i] = bt816_mem_read8(i);
+		}
+		if(check_item_config(conf_buf, 8)) {
+			clust_bit_names_addr = 4096 + addr + 64;
+			clust_bit_names_cnt = ((uint16_t)conf_buf[6]<<8) | conf_buf[7];
 		}
 	}
 
@@ -259,20 +299,108 @@ void read_config() {
 
 }
 
-uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf) {
-	return 0;
+uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
+	uint8_t res = 0;
+	if(clust_reg_names_addr && (num < clust_reg_names_cnt)) {
+		uint8_t user_name[21];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, clust_reg_names_addr+128ul*num, 128);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<20;i++) {
+			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
+		}
+		if(user_name[0]==0) {
+			for(uint16_t i=0;i<20;i++) {
+				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
+			}
+		}
+		uint16_t length = strlen(user_name);
+		if(length>=max_length) {
+			length = max_length-1;
+			user_name[max_length-1]=0;
+		}
+		memcpy(buf,user_name,length+1);
+		res = length;
+	}
+	return res;
 }
 
-uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf) {
-	return 0;
+uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
+	uint8_t res = 0;
+	if(clust_bit_names_addr && (num < clust_bit_names_cnt)) {
+		uint8_t user_name[21];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, clust_bit_names_addr+128ul*num, 128);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<20;i++) {
+			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
+		}
+		if(user_name[0]==0) {
+			for(uint16_t i=0;i<20;i++) {
+				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
+			}
+		}
+		uint16_t length = strlen(user_name);
+		if(length>=max_length) {
+			length = max_length-1;
+			user_name[max_length-1]=0;
+		}
+		memcpy(buf,user_name,length+1);
+		res = length;
+	}
+	return res;
 }
 
-uint8_t get_net_reg_name(uint16_t num, uint8_t *buf) {
-	return 0;
+uint8_t get_net_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
+	uint8_t res = 0;
+	if(net_reg_names_addr && (num < net_reg_names_cnt)) {
+		uint8_t user_name[21];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, net_reg_names_addr+128ul*num, 128);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<20;i++) {
+			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
+		}
+		if(user_name[0]==0) {
+			for(uint16_t i=0;i<20;i++) {
+				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
+			}
+		}
+		uint16_t length = strlen(user_name);
+		if(length>=max_length) {
+			length = max_length-1;
+			user_name[max_length-1]=0;
+		}
+		memcpy(buf,user_name,length+1);
+		res = length;
+	}
+	return res;
 }
 
-uint8_t get_net_bit_name(uint16_t num, uint8_t *buf) {
-	return 0;
+uint8_t get_net_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
+	uint8_t res = 0;
+	if(net_bit_names_addr && (num < net_bit_names_cnt)) {
+		uint8_t user_name[21];
+		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
+		bt816_cmd_flashread(0, net_bit_names_addr+128ul*num, 128);
+		vTaskDelay(1);
+		for(uint16_t i=0;i<20;i++) {
+			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
+		}
+		if(user_name[0]==0) {
+			for(uint16_t i=0;i<20;i++) {
+				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
+			}
+		}
+		uint16_t length = strlen(user_name);
+		if(length>=max_length) {
+			length = max_length-1;
+			user_name[max_length-1]=0;
+		}
+		memcpy(buf,user_name,length+1);
+		res = length;
+	}
+	return res;
 }
 
 uint8_t get_ai_meas_unit(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
@@ -281,10 +409,10 @@ uint8_t get_ai_meas_unit(uint8_t dev_num, uint8_t inp_num, uint8_t *buf) {
 	if(conf_ai_addr && (inp_num < conf_ai_cnt)) {
 		uint8_t user_name[21];
 		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
-		bt816_cmd_flashread(0, conf_ai_addr+128ul*inp_num, 128);
+		bt816_cmd_flashread(0, conf_ai_addr+192ul*inp_num, 192);
 		vTaskDelay(1);
 		for(uint16_t i=0;i<20;i++) {
-			user_name[i] = bt816_mem_read8(i+80); // 80 - measure unit nam offset
+			user_name[i] = bt816_mem_read8(i+128); // 128 - measure unit name offset
 		}
 		memcpy(buf,user_name,sizeof(user_name));
 		res = strlen(user_name);
@@ -480,13 +608,14 @@ void read_message_conf() {
 
 		if(message_var_addr && (i < message_var_cnt)) {
 			bt816_cmd_flashread(0, message_var_addr+64ul*i, 64);
-			vTaskDelay(1);
+			vTaskDelay(5);
 			msg_conf[i].var_type = bt816_mem_read8(40);
 			msg_conf[i].var_index = bt816_mem_read8(41);
 			msg_conf[i].var_index = msg_conf[i].var_index << 8;
 			msg_conf[i].var_index |= bt816_mem_read8(42);
 			msg_conf[i].message_type = bt816_mem_read8(43);
 			msg_conf[i].used = 1;
+			vTaskDelay(1);
 		}
 	}
 }

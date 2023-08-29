@@ -22,8 +22,6 @@ extern menu_list_t current_menu;
 
 void state_menu(uint16_t key) {
 
-	scan_messages();
-
 	bt816_cmd_dl(CMD_DLSTART); /* start the display list */
 	bt816_cmd_dl(DL_CLEAR_COLOR_RGB | BLACK);
 	bt816_cmd_dl(DL_CLEAR | CLR_COL | CLR_STN | CLR_TAG);

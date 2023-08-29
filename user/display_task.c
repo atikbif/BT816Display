@@ -24,10 +24,13 @@
 #include "cluster_state_menu.h"
 #include "bt816_spi.h"
 #include "message_archive.h"
+#include "message_scaner.h"
 
 extern cluster cl;
 
 volatile uint8_t err_str[128];
+
+uint16_t stop_display = 0;
 
 void lcd_task_function(void *pvParameters)
 {
@@ -57,12 +60,16 @@ void lcd_task_function(void *pvParameters)
 	read_calculation_config(0);
 	read_password();
 	read_mnemo_data(mnemo_num);
-	init_menu();
 	init_archive();
 	read_message_conf();
+	init_menu();
+
 	while(1)
 	{
 		//draw_mnemo();
+
+
+		scan_messages();
 
 		uint32_t space = bt816_mem_read32(REG_CMDB_SPACE);
 		if((space & 0x3) != 0) {
@@ -83,9 +90,15 @@ void lcd_task_function(void *pvParameters)
 		}else key_cmd = 0;
 		prev_key = cur_key;
 
-		display_menu(key_cmd);
-		check_new_records_update(100);
+		if(stop_display==0) display_menu(key_cmd);
+		else {
+			if(stop_display>=100) stop_display-=100;
+			else stop_display = 0;
+		}
+
+
 		//demo_display_fonts();
 		vTaskDelay(100);
+		check_new_records_update(100);
 	}
 }
