@@ -305,15 +305,15 @@ void read_config() {
 uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 	uint8_t res = 0;
 	if(clust_reg_names_addr && (num < clust_reg_names_cnt)) {
-		uint8_t user_name[21];
+		uint8_t user_name[41];
 		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
 		bt816_cmd_flashread(0, clust_reg_names_addr+128ul*num, 128);
 		vTaskDelay(1);
-		for(uint16_t i=0;i<20;i++) {
+		for(uint16_t i=0;i<40;i++) {
 			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
 		}
 		if(user_name[0]==0) {
-			for(uint16_t i=0;i<20;i++) {
+			for(uint16_t i=0;i<40;i++) {
 				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
 			}
 		}
@@ -357,15 +357,15 @@ uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 uint8_t get_net_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 	uint8_t res = 0;
 	if(net_reg_names_addr && (num < net_reg_names_cnt)) {
-		uint8_t user_name[21];
+		uint8_t user_name[41];
 		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
 		bt816_cmd_flashread(0, net_reg_names_addr+128ul*num, 128);
 		vTaskDelay(1);
-		for(uint16_t i=0;i<20;i++) {
+		for(uint16_t i=0;i<40;i++) {
 			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
 		}
 		if(user_name[0]==0) {
-			for(uint16_t i=0;i<20;i++) {
+			for(uint16_t i=0;i<40;i++) {
 				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
 			}
 		}
@@ -383,15 +383,15 @@ uint8_t get_net_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 uint8_t get_net_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 	uint8_t res = 0;
 	if(net_bit_names_addr && (num < net_bit_names_cnt)) {
-		uint8_t user_name[21];
+		uint8_t user_name[41];
 		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
 		bt816_cmd_flashread(0, net_bit_names_addr+128ul*num, 128);
 		vTaskDelay(1);
-		for(uint16_t i=0;i<20;i++) {
+		for(uint16_t i=0;i<40;i++) {
 			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
 		}
 		if(user_name[0]==0) {
-			for(uint16_t i=0;i<20;i++) {
+			for(uint16_t i=0;i<40;i++) {
 				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
 			}
 		}
@@ -889,7 +889,7 @@ uint8_t check_item_config(uint8_t *ptr, uint16_t id) {
 	uint16_t cur_id = ((uint16_t)ptr[0]<<8) | ptr[1];
 	if(cur_id == id) {
 		uint16_t length = ((uint16_t)ptr[2]<<8) | ptr[3];
-		if(length>4096) length = 4096;
+		if(length>4096) return 1; // no crc check for big buffers
 		if(length<2) length = 2;
 		length-=2;
 		ptr[2] = 0;

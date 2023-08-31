@@ -68,7 +68,7 @@ void system_confug_menu(uint16_t key) {
 	}
 
 	if(var_cnt==0) {
-		bt816_cmd_text(x_pos,y_pos,4,0,"NO DATA");
+		bt816_cmd_text(x_pos,y_pos,2,0,"NO DATA");
 	}
 
 	bt816_cmd_dl(DL_DISPLAY);

@@ -23,6 +23,8 @@ static uint8_t num_buf[5];
 
 extern cluster cl;
 
+extern uint16_t clust_reg_names_cnt;
+
 static uint8_t down_sign = 0;
 static uint8_t up_sign = 0;
 
@@ -45,13 +47,13 @@ void global_integers_menu(uint16_t key) {
 	bt816_cmd_dl(DL_END);
 
 	if(first_visible_record) up_sign=1;else up_sign=0;
-	if(first_visible_record+max_records_cnt<CLUSTER_REGS_CNT) down_sign=1;else down_sign=0;
+	if(first_visible_record+max_records_cnt<clust_reg_names_cnt) down_sign=1;else down_sign=0;
 
 
-	for(int i=0;i<CLUSTER_REGS_CNT;i++) {
+	for(int i=0;i<clust_reg_names_cnt;i++) {
 		if(i>=first_visible_record && (i<(first_visible_record+max_records_cnt))) {
 			for(int j=0;j<sizeof(rec_buf);j++) rec_buf[j]=0;
-			uint16_t length = get_glob_integer_name(i, rec_buf);
+			uint16_t length = get_cluster_reg_name(i, rec_buf, sizeof(rec_buf));
 			if(length) {
 				bt816_cmd_text(50, 95+(i-first_visible_record)*30, 1, 0, rec_buf);
 			}else {
@@ -107,7 +109,7 @@ void global_integers_menu(uint16_t key) {
 				else first_visible_record = 0;
 				break;
 			case KEY_DOWN:
-				if(first_visible_record+max_records_cnt<CLUSTER_REGS_CNT) first_visible_record++;
+				if(first_visible_record+max_records_cnt<clust_reg_names_cnt) first_visible_record++;
 				break;
 		}
 	}
