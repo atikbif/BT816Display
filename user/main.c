@@ -42,6 +42,7 @@
 #include "trend_data.h"
 #include "cluster_state_menu.h"
 #include "can_task.h"
+#include "message_archive.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -206,6 +207,17 @@ void network_task_function(void *pvParameters)
 		}
 		hb_cnt++;
 		if(hb_cnt>=3000) {
+			if(plc_can_link) {
+				struct message_record rec;
+				rec.message_type = 0;
+				rec.message_id = MSG_ARCH_CHECK_CAN;
+				rec.time = time_to_uint32();
+				uint8_t rec_body[1];
+				rec_body[0] = 0; //can error
+				rec.length = 1;
+				rec.ptr = rec_body;
+				add_record_to_archive(&rec);
+			}
 			hb_cnt = 0;
 			plc_can_link = 0;
 			cluster_data.plc_link[0] = 0;

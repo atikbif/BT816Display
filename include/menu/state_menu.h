@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+void init_state_menu();
 void state_menu(uint16_t key);
 
 #endif /* INCLUDE_MENU_STATE_MENU_H_ */

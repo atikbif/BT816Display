@@ -54,17 +54,7 @@ void test_cluster_info_menu() {
 }
 
 void test_alarm_list_menu() {
-	for(uint8_t i=0;i<70;i++) {
-		alarm_info info;
-		info.alarm_id = CHECK_EXT_FLASH_OK;
-		info.time.date = 1;
-		info.time.month = 2;
-		info.time.year = 23;
-		info.time.hour=14;
-		info.time.min=27+i/60;
-		info.time.sec=i%60;
-		add_alarm(info);
-	}
+	init_alarm_info_menu();
 	current_menu = MENU_ALARM_LIST;
 }
 

@@ -11,6 +11,9 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "config.h"
+#include "string.h"
+
+#define JD0               2451911
 
 static uint8_t arch_buf[ARCHIVE_PAGE_SIZE];
 
@@ -33,16 +36,16 @@ static void open_archive() {
 }
 
 static uint8_t check_record(uint8_t *ptr) {
+	uint8_t buf[ARCHIVE_RECORD_LENGTH];
 	uint8_t res = 0;
-	uint8_t length = ptr[7];
-	uint8_t crc_h = ptr[8];
-	uint8_t crc_l = ptr[9];
-	ptr[8] = 0;
-	ptr[9] = 0;
-	uint16_t crc = GetCRC16(ptr, ARCHIVE_RECORD_SYS_DATA_LENGTH + length);
-	if((((crc>>8)&0xFF)==crc_h) && (crc&0xFF==crc_l)) res = 1;
-	ptr[8] = crc_h;
-	ptr[9] = crc_l;
+	memcpy(buf,ptr,ARCHIVE_RECORD_LENGTH);
+	uint8_t length = buf[7];
+	uint8_t crc_h = buf[8];
+	uint8_t crc_l = buf[9];
+	buf[8] = 0;
+	buf[9] = 0;
+	uint16_t crc = GetCRC16(buf, ARCHIVE_RECORD_SYS_DATA_LENGTH + length);
+	if((((crc>>8)&0xFF)==crc_h) && ((crc&0xFF)==crc_l)) res = 1;
 	return res;
 }
 
@@ -55,16 +58,16 @@ void init_archive() {
 }
 
 void add_record_to_archive(struct message_record *rec) {
-
-	uint16_t offset = 0;
+	uint8_t *ptr = 0;
 
 	if(last_rec_ptr==0) {
 		last_rec_ptr= &arch_buf[0];
+		ptr = last_rec_ptr;
 	}else {
-		offset+=ARCHIVE_RECORD_LENGTH;
-		if(offset>=ARCHIVE_PAGE_SIZE) {
+		ptr=last_rec_ptr+ARCHIVE_RECORD_LENGTH;
+		if(ptr>=&arch_buf[ARCHIVE_PAGE_SIZE-1]) {
 			if(ext_flash_used) save_archive();
-			offset = 0;
+			ptr = &arch_buf[0];
 		}
 	}
 
@@ -72,27 +75,29 @@ void add_record_to_archive(struct message_record *rec) {
 		rec->length = ARCHIVE_RECORD_LENGTH - ARCHIVE_RECORD_SYS_DATA_LENGTH;
 	}
 
-	arch_buf[offset] = (rec->time>>24)&0xFF;
-	arch_buf[offset+1] = (rec->time>>16)&0xFF;
-	arch_buf[offset+2] = (rec->time>>8)&0xFF;
-	arch_buf[offset+3] = (rec->time)&0xFF;
-	arch_buf[offset+4] = (rec->message_id>>8)&0xFF;
-	arch_buf[offset+5] = rec->message_id&0xFF;
-	arch_buf[offset+6] = rec->message_type;
-	arch_buf[offset+7] = rec->length;
-	arch_buf[offset+8] = 0; // crch place
-	arch_buf[offset+9] = 0; // crcl place
+	ptr[0] = (rec->time>>24)&0xFF;
+	ptr[1] = (rec->time>>16)&0xFF;
+	ptr[2] = (rec->time>>8)&0xFF;
+	ptr[3] = (rec->time)&0xFF;
+	ptr[4] = (rec->message_id>>8)&0xFF;
+	ptr[5] = rec->message_id&0xFF;
+	ptr[6] = rec->message_type;
+	ptr[7] = rec->length;
+	ptr[8] = 0; // crch place
+	ptr[9] = 0; // crcl place
 
 	for(uint16_t i=0;i<ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH;i++) {
-		if(i<rec->length) arch_buf[offset+ARCHIVE_RECORD_SYS_DATA_LENGTH+i] = rec->ptr[i];
-		else arch_buf[offset+ARCHIVE_RECORD_SYS_DATA_LENGTH+i] = 0;	// zero tail
+		if(i<rec->length) ptr[ARCHIVE_RECORD_SYS_DATA_LENGTH+i] = rec->ptr[i];
+		else ptr[ARCHIVE_RECORD_SYS_DATA_LENGTH+i] = 0;	// zero tail
 	}
 
-	uint16_t crc = GetCRC16(&arch_buf[offset], ARCHIVE_RECORD_SYS_DATA_LENGTH + rec->length);
-	arch_buf[offset+8] = crc >> 8; 	// crch place
-	arch_buf[offset+8] = crc & 0xFF; 	// crcl place
+	uint16_t crc = GetCRC16(ptr, ARCHIVE_RECORD_SYS_DATA_LENGTH + rec->length);
+	ptr[8] = crc >> 8; 	// crch place
+	ptr[9] = crc & 0xFF; 	// crcl place
 
-	last_rec_ptr = &arch_buf[offset];
+	last_rec_ptr = ptr;
+
+	get_archive_records_cnt();
 
 	archive_new_record_flag = 1;
 }
@@ -131,12 +136,7 @@ uint8_t get_record_with_offset_from_last(uint16_t offset, struct message_record 
 	if(ptr) {
 		uint8_t length = ptr[7];
 		if(length>ARCHIVE_RECORD_LENGTH-ARCHIVE_RECORD_SYS_DATA_LENGTH) return 0;
-		uint16_t crc = ptr[8];
-		crc = crc << 8;
-		crc |= ptr[9];
-		ptr[8] = 0;
-		ptr[9] = 0;
-		if(GetCRC16(ptr, ARCHIVE_RECORD_SYS_DATA_LENGTH+length)!=crc) return 0;
+		if(check_record(ptr)==0) return 0;
 		rec->length = length;
 		rec->time = ptr[0];
 		rec->time = rec->time<<8;
@@ -176,7 +176,7 @@ void check_new_records_update(uint16_t step) {
 	}
 }
 
-uint16_t get_archive_record_message(struct message_record *rec, uint8_t *out_buf, uint16_t max_length) {
+uint16_t get_archive_message(struct message_record *rec, uint8_t *out_buf, uint16_t max_length) {
 	uint16_t res = 0;
 	uint16_t index = 0;
 	uint16_t i = 0;
@@ -230,6 +230,115 @@ uint16_t get_archive_record_message(struct message_record *rec, uint8_t *out_buf
 	if(max_length && (res>=max_length)) {
 		out_buf[max_length-1] = 0;
 	}
+	return res;
+}
+
+uint16_t get_archive_message_time(struct message_record *rec, uint8_t *out_buf, uint16_t max_length) {
+	uint16_t i = 0;
+	uint16_t res =0;
+	for(i=0;i<max_length;i++) out_buf[i]=0;
+	uint32_t ace;
+	uint8_t b,d,m;
+
+	ace = (rec->time/86400) + 32044 + JD0;
+	b = (4*ace + 3)/146097;
+	ace = ace - ((146097*b)/4);
+	d = (4*ace + 3)/1461;
+	ace = ace - ((1461*d)/4);
+	m = (5*ace + 2)/153;
+	uint8_t date = ace - ((153*m+2)/5) + 1;
+	uint8_t month = m + 3 - (12*(m/10));
+	uint8_t year = 100*b + d-4800 + (m/10) - 2000;
+	uint8_t hour = (rec->time/3600)%24;
+	uint8_t min = (rec->time/60)%60;
+	uint8_t sec = (rec->time%60);
+
+	out_buf[res++]=hour/10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=hour%10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=':';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=min/10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=min%10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=':';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=sec/10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=sec%10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=' ';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=date/10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=date%10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]='/';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=month/10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=month%10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]='/';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=year/10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=year%10+'0';
+	if(res>=max_length) {
+		out_buf[max_length-1]=0;
+		return max_length-1;
+	}
+	out_buf[res++]=0;
 	return res;
 }
 

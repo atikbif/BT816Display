@@ -14,6 +14,7 @@
 #include "alarm_list_menu.h"
 #include <string.h>
 #include "at32f435_437_board.h"
+#include "message_archive.h"
 
 static uint16_t cmd = 0;
 
@@ -150,7 +151,7 @@ void passwd_menu(uint16_t key) {
 			if(check_tmp_passwd()) {
 				if(cmd==CLR_ALARM_LIST) {
 					current_menu = MENU_MAIN;
-					clear_alarm_list();
+					clear_archive();
 				}else if(cmd==CONFIG_ACCESS) {
 					current_menu = MENU_CONFIG;
 				}else {

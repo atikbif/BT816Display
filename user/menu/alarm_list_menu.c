@@ -12,11 +12,9 @@
 #include "keys.h"
 #include "menu_list.h"
 #include "string.h"
+#include "message_archive.h"
 
-#define MESSAGE_CNT		16
-
-const char check_flash_ok[] = "\x46\x4c\x41\x53\x48\x20\xd0\x9f\xd0\xa0\xd0\x9e\xd0\x92\xd0\x95\xd0\xa0\xd0\x95\xd0\x9d\xd0\x9e";
-const char check_flash_err[] = "\x46\x4c\x41\x53\x48\x20\xd0\x9e\xd0\xa8\xd0\x98\xd0\x91\xd0\x9a\xd0\x90";
+#define MESSAGE_CNT		10
 
 static uint8_t down_sign = 0;
 static uint8_t up_sign = 0;
@@ -24,84 +22,13 @@ static uint8_t up_sign = 0;
 #define MAX_ALARM_MESSAGE_LENGTH	(64+1)
 static uint8_t alarm_text[MAX_ALARM_MESSAGE_LENGTH];
 
-alarm_info alarm_list[ALARM_LIST_SIZE];
-
 static uint16_t first_visible_alarm_num = 0;
 static uint16_t alarm_cnt = 0;
 
 extern menu_list_t current_menu;
 
-static uint8_t get_additional_alarm_info(uint32_t addr, uint8_t *buf);
-static uint8_t get_alarm_description(uint16_t index);
-static uint8_t print_date(uint8_t *buf, time_info time);
-
-void clear_alarm_list() {
-	for(uint16_t i=0;i<ALARM_LIST_SIZE;i++) alarm_list[i].alarm_id=0;
-	alarm_cnt = 0;
-}
-
-void add_alarm(alarm_info info) {
-	for(uint16_t i=0;i<ALARM_LIST_SIZE-1;i++) alarm_list[ALARM_LIST_SIZE-1-i]=alarm_list[ALARM_LIST_SIZE-2-i];
-	if(alarm_cnt<ALARM_LIST_SIZE) alarm_cnt++;
-	alarm_list[0] = info;
-}
-
-uint8_t get_additional_alarm_info(uint32_t addr, uint8_t *buf) {
-	return 0;
-}
-
-static uint8_t print_date(uint8_t *buf, time_info time) {
-	buf[0]=time.hour/10+'0';
-	buf[1]=time.hour%10+'0';
-	buf[2]=':';
-	buf[3]=time.min/10+'0';
-	buf[4]=time.min%10+'0';
-	buf[5]=':';
-	buf[6]=time.sec/10+'0';
-	buf[7]=time.sec%10+'0';
-	buf[8]=' ';
-	buf[9]=time.date/10+'0';
-	buf[10]=time.date%10+'0';
-	buf[11]='/';
-	buf[12]=time.month/10+'0';
-	buf[13]=time.month%10+'0';
-	buf[14]='/';
-	buf[15]=time.year/10+'0';
-	buf[16]=time.month%10+'0';
-	return 17;
-}
-
-uint8_t get_alarm_description(uint16_t index) {
-	for(uint8_t i=0;i<MAX_ALARM_MESSAGE_LENGTH;i++) alarm_text[i]=0;
-
-	if(alarm_list[index].alarm_id) {
-		uint16_t j = 0;
-		for(j=0;j<MAX_ALARM_MESSAGE_LENGTH-1;j++) alarm_text[j]=0;
-		uint16_t pos = 0;
-		uint16_t value = index + 1;
-		while(value>=1000) value-=1000;
-		if(value>=100) alarm_text[pos++] = value/100 + '0';
-		while(value>=100) value-=100;
-		if(value>=10) alarm_text[pos++] = value/10 + '0';
-		while(value>=10) value-=10;
-		alarm_text[pos++] = value + '0';
-		while(pos<4) alarm_text[pos++]=' ';
-		uint16_t length = 0;
-		switch(alarm_list[index].alarm_id) {
-			case CHECK_EXT_FLASH_OK:
-				length = strlen(check_flash_ok);
-				for(j=0;j<length;j++) alarm_text[pos++] = check_flash_ok[j];
-				break;
-			case CHECK_EXT_FLASH_ERR:
-				length = strlen(check_flash_err);
-				for(j=0;j<length;j++) alarm_text[pos++] = check_flash_err[j];
-				break;
-		}
-		while(pos<40) alarm_text[pos++]=' ';
-		pos+=print_date(&alarm_text[pos],alarm_list[index].time);
-		return pos+1;
-	}
-	return 0;
+void init_alarm_info_menu() {
+	first_visible_alarm_num = 0;
 }
 
 void alarm_info_menu(uint16_t key) {
@@ -117,13 +44,17 @@ void alarm_info_menu(uint16_t key) {
 	bt816_cmd_dl(DL_END);
 
 
-	bt816_cmd_setfont2(1,MEM_FONT14,0);
+	bt816_cmd_setfont2(1,MEM_FONT22,0);
+
+	alarm_cnt = get_archive_records_cnt();
+
+	if(alarm_cnt==0) first_visible_alarm_num = 0;
 
 	if(first_visible_alarm_num>=MESSAGE_CNT) up_sign=1;else up_sign=0;
 	if(first_visible_alarm_num+MESSAGE_CNT<alarm_cnt) down_sign=1;else down_sign=0;
 
-	if(first_visible_alarm_num>ALARM_LIST_SIZE-MESSAGE_CNT) {
-		first_visible_alarm_num = ALARM_LIST_SIZE-MESSAGE_CNT;
+	if(first_visible_alarm_num>MAX_ARCHIVE_RECORDS_CNT-MESSAGE_CNT) {
+		first_visible_alarm_num = MAX_ARCHIVE_RECORDS_CNT-MESSAGE_CNT;
 	}
 
 	if(up_sign) {
@@ -151,12 +82,36 @@ void alarm_info_menu(uint16_t key) {
 	bt816_cmd_dl(DL_COLOR_RGB | WHITE);
 	bt816_cmd_dl(DL_END);
 
-	uint16_t step = 20;
+	uint16_t step = 30;
 	for(int i=0;i<MESSAGE_CNT;i++) {
-		uint16_t length = get_alarm_description(i+first_visible_alarm_num);
-		if(length) {
-			bt816_cmd_text(60, 90+i*step, 1, 0, alarm_text);
-		}
+
+		if(first_visible_alarm_num+i>=alarm_cnt) break;
+		struct message_record rec;
+
+		uint8_t rec_body[ARCHIVE_RECORD_LENGTH - ARCHIVE_RECORD_SYS_DATA_LENGTH];
+		rec.ptr = rec_body;
+
+		if(get_record_with_offset_from_last(first_visible_alarm_num+i, &rec)) {
+			uint16_t length = get_archive_message(&rec, alarm_text, MAX_ALARM_MESSAGE_LENGTH);
+			if(length) {
+
+				if(rec.message_type==1) {
+					bt816_cmd_dl(DL_COLOR_RGB | YELLOW);
+					bt816_cmd_dl(DL_END);
+				}else if(rec.message_type==2) {
+					bt816_cmd_dl(DL_COLOR_RGB | RED);
+					bt816_cmd_dl(DL_END);
+				}
+
+				bt816_cmd_text(60, 90+i*step, 1, 0, alarm_text);
+				length = get_archive_message_time(&rec, alarm_text, MAX_ALARM_MESSAGE_LENGTH);
+				bt816_cmd_text(400, 90+i*step, 1, 0, alarm_text);
+
+				bt816_cmd_dl(DL_COLOR_RGB | WHITE);
+				bt816_cmd_dl(DL_END);
+			}
+		}else break;
+
 	}
 
 

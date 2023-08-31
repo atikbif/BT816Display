@@ -24,5 +24,6 @@ typedef struct {
 void add_alarm(alarm_info info);
 void alarm_info_menu(uint16_t key);
 void clear_alarm_list();
+void init_alarm_info_menu();
 
 #endif /* INCLUDE_ALARM_LIST_MENU_H_ */

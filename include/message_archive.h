@@ -33,6 +33,7 @@ uint16_t get_archive_records_cnt();
 void clear_archive();
 uint8_t get_record_with_offset_from_last(uint16_t offset, struct message_record *rec);
 void check_new_records_update(uint16_t step);
-uint16_t get_archive_record_message(struct message_record *rec, uint8_t *out_buf, uint16_t max_length);
+uint16_t get_archive_message(struct message_record *rec, uint8_t *out_buf, uint16_t max_length);
+uint16_t get_archive_message_time(struct message_record *rec, uint8_t *out_buf, uint16_t max_length);
 
 #endif /* INCLUDE_MESSAGE_ARCHIVE_H_ */

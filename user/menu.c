@@ -163,8 +163,6 @@ void main_menu(uint16_t key) {
 	bt816_cmd_dl(VERTEX2F(0, 0));
 	bt816_cmd_dl(DL_END);
 
-	//test_add_trend_menu();
-
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
 
@@ -176,6 +174,7 @@ void main_menu(uint16_t key) {
 			current_menu = MENU_CLUST_INFO;
 			break;
 		case KEY_3:
+			init_alarm_info_menu();
 			current_menu = MENU_ALARM_LIST;
 			break;
 		case KEY_4:
@@ -199,6 +198,7 @@ void main_menu(uint16_t key) {
 			break;
 		case KEY_LEFT:
 		case KEY_EXIT:
+			init_state_menu();
 			current_menu = MENU_STATE;
 			break;
 	}

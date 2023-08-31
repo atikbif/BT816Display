@@ -22,10 +22,12 @@
 #include "at32f435_437_ertc.h"
 
 #include "message_scaner.h"
+#include "prog_menu.h"
 
 extern menu_list_t current_menu;
 extern ertc_time_type dev_time;
 extern uint8_t plc_can_link;
+extern uint8_t prog_mode_flag;
 
 static uint8_t down_sign = 0;
 static uint8_t up_sign = 0;
@@ -55,9 +57,13 @@ static uint8_t print_date(uint8_t *buf, time_info time) {
 	buf[13]=time.month%10+'0';
 	buf[14]='/';
 	buf[15]=time.year/10+'0';
-	buf[16]=time.month%10+'0';
+	buf[16]=time.year%10+'0';
 	buf[17]=0;
 	return 18;
+}
+
+void init_state_menu() {
+	first_visible_message_num = 0;
 }
 
 void state_menu(uint16_t key) {
@@ -181,13 +187,17 @@ void state_menu(uint16_t key) {
 			bt816_cmd_text(60, 90, 1, 0, "\xd0\xa1\xd0\x98\xd0\xa1\xd0\xa2\xd0\x95\xd0\x9c\xd0\x90\x20\xd0\x98\xd0\xa1\xd0\x9f\xd0\xa0\xd0\x90\xd0\x92\xd0\x9d\xd0\x90");
 		}
 	}
-
-
+	bt816_cmd_text(290, 430, 1, 0, "\xd0\x94\xd0\xb5\xd0\xb2\xd0\xb8\xd1\x81\x20\xd0\x94\xd0\xb5\xd1\x80\xd0\xb1\xd0\xb8\x20\xd0\xa1\xd0\xb8\xd0\xb1\xd0\xb8\xd1\x80\xd1\x8c");
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
 
 	switch(key) {
+		case KEY_0:
+			prog_mode_flag = 1;
+			init_prog_menu();
+			current_menu = MENU_PROG;
+			break;
 		case KEY_RIGHT:
 		case KEY_ENTER:
 		case KEY_EXIT:

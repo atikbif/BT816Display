@@ -17,10 +17,12 @@
 #include "var_link.h"
 #include "cluster_state.h"
 #include "message_scaner.h"
+#include "message_archive.h"
 #include "crc.h"
 #include "bt816_cmd.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "cur_time.h"
 
 extern appl_info_data_type appl_info_data;
 extern cluster_info_data_type cluster_data;
@@ -287,15 +289,16 @@ void read_config() {
 
 	ertc_calendar_get(&dev_time);
 
-	alarm_info info;
-	info.alarm_id = CHECK_EXT_FLASH_OK;
-	info.time.date = dev_time.day;
-	info.time.month = dev_time.month;
-	info.time.year = dev_time.year;
-	info.time.hour=dev_time.hour;
-	info.time.min=dev_time.min;
-	info.time.sec=dev_time.sec;
-	add_alarm(info);
+
+	struct message_record rec;
+	rec.message_type = 0;
+	rec.message_id = MSG_ARCH_CHECK_FLASH;
+	rec.time = time_to_uint32();
+	uint8_t rec_body[1];
+	rec_body[0] = 1; //test ok
+	rec.length = 1;
+	rec.ptr = rec_body;
+	add_record_to_archive(&rec);
 
 }
 
@@ -328,15 +331,15 @@ uint8_t get_cluster_reg_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 uint8_t get_cluster_bit_name(uint16_t num, uint8_t *buf, uint16_t max_length) {
 	uint8_t res = 0;
 	if(clust_bit_names_addr && (num < clust_bit_names_cnt)) {
-		uint8_t user_name[21];
+		uint8_t user_name[41];
 		for(uint16_t i=0;i<sizeof(user_name);i++) user_name[i]=0;
 		bt816_cmd_flashread(0, clust_bit_names_addr+128ul*num, 128);
 		vTaskDelay(1);
-		for(uint16_t i=0;i<20;i++) {
+		for(uint16_t i=0;i<40;i++) {
 			user_name[i] = bt816_mem_read8(i+64); // 64 - user name offset
 		}
 		if(user_name[0]==0) {
-			for(uint16_t i=0;i<20;i++) {
+			for(uint16_t i=0;i<40;i++) {
 				user_name[i] = bt816_mem_read8(i); // 0 - sys name offset
 			}
 		}

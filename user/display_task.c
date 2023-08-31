@@ -25,8 +25,10 @@
 #include "bt816_spi.h"
 #include "message_archive.h"
 #include "message_scaner.h"
+#include "test_menu.h"
 
 extern cluster cl;
+extern uint8_t plc_can_link;
 
 volatile uint8_t err_str[128];
 
@@ -54,15 +56,28 @@ void lcd_task_function(void *pvParameters)
 		vTaskDelay(100);
 		try++;
 	}
+	init_archive();
 	init_display_fonts();
 	init_mnemo();
 	read_config();
 	read_calculation_config(0);
 	read_password();
 	read_mnemo_data(mnemo_num);
-	init_archive();
 	read_message_conf();
 	init_menu();
+
+	//test_alarm_list_menu();
+	if(plc_can_link==0) {
+		struct message_record rec;
+		rec.message_type = 0;
+		rec.message_id = MSG_ARCH_CHECK_CAN;
+		rec.time = time_to_uint32();
+		uint8_t rec_body[1];
+		rec_body[0] = 0; //can error
+		rec.length = 1;
+		rec.ptr = rec_body;
+		add_record_to_archive(&rec);
+	}
 
 	while(1)
 	{
