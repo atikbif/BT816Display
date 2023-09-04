@@ -58,6 +58,8 @@ uint8_t get_io_names_flag = 0;
 
 extern cluster_info_data_type cluster_data;
 
+extern uint16_t update_di;
+
 
 struct can_packet_id {
 	uint16_t srv: 3;
@@ -156,6 +158,8 @@ void check_can_rx_data(can_rx_message_type *rx) {
 			hb_cnt = 0;
 			if(plc_can_link) {
 				get_io_names_flag = 1;
+			}else {
+				update_di = 0xFF;
 			}
 			plc_can_link = 1;
 			plc_can_addr = can_id->node_addr;
