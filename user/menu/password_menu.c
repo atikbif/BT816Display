@@ -19,6 +19,7 @@
 static uint16_t cmd = 0;
 
 uint8_t passwd[6]={0,0,0,0,0,0};
+static uint8_t user_password[6] = {1,1,1,1,1,1};
 static uint8_t tmp_passwd[6] = {0,0,0,0,0,0};
 static uint8_t new_passwd[6] = {0,0,0,0,0,0};
 static uint8_t secret_passw[6] = {3,4,1,6,7,1};
@@ -33,7 +34,11 @@ extern menu_list_t current_menu;
 static uint8_t check_tmp_passwd() {
 	uint8_t res = 1;
 	for(uint8_t i=0;i<sizeof(passwd);i++) {
-		if(passwd[i]!=tmp_passwd[i]) res=0;
+		if(cmd==CLR_ALARM_LIST) {
+			if(user_password[i]!=tmp_passwd[i]) res=0;
+		}else {
+			if(passwd[i]!=tmp_passwd[i]) res=0;
+		}
 	}
 	if(res==0) {
 		res = 1;

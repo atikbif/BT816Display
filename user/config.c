@@ -740,12 +740,12 @@ void set_ip_gate(uint8_t *ptr) {
 }
 
 void read_password() {
-	if (ertc_bpr_data_read(ERTC_DT2) != 0x1234)
+	if (ertc_bpr_data_read(ERTC_DT2) != 0x1235)
 	{
-		ertc_bpr_data_write(ERTC_DT2, 0x1234);
-		ertc_bpr_data_write(ERTC_DT3, 0x0101);
-		ertc_bpr_data_write(ERTC_DT4, 0x0101);
-		ertc_bpr_data_write(ERTC_DT5, 0x0101);
+		ertc_bpr_data_write(ERTC_DT2, 0x1235);
+		ertc_bpr_data_write(ERTC_DT3, 0x0102);
+		ertc_bpr_data_write(ERTC_DT4, 0x0304);
+		ertc_bpr_data_write(ERTC_DT5, 0x0506);
 	}
 	uint16_t val  = ertc_bpr_data_read(ERTC_DT3);
 	passwd[0] = val >> 8;

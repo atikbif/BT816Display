@@ -7,6 +7,9 @@
 
 #include <string.h>
 #include "bt816_cmd.h"
+#include "prog_menu.h"
+#include "menu_list.h"
+#include "state_menu.h"
 
 
 #define UDPECHO_THREAD_PRIO  	( tskIDLE_PRIORITY + 5 )
@@ -27,6 +30,8 @@ static unsigned short port;
 extern uint8_t prog_mode_flag;
 extern uint8_t rst_flag;
 extern uint16_t rst_tmr;
+
+extern menu_list_t current_menu;
 
 static volatile uint8_t fl_buf[BLOCK_SIZE];
 
@@ -110,6 +115,19 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 							// access denied
 						}
 
+						break;
+					case 0x03:	// set program mode
+						prog_mode_flag = 1;
+						init_prog_menu();
+						current_menu = MENU_PROG;
+						udp_tx[8] = 0x01;
+						res = 9;
+						break;
+					case 0x04:
+						init_state_menu();
+						current_menu = MENU_STATE;
+						udp_tx[8] = 0x01;
+						res = 9;
 						break;
 				}
 			}
