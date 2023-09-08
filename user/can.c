@@ -111,6 +111,7 @@ void can_write_from_stack() {
 		if(try>=10) return;
 		if(get_tx_can_packet(&can_tx_stack,&packet)) {
 			can1_tx_tmr = 0;
+			gpio_bits_set(GPIOG,GPIO_PINS_3);
 			if(packet.length>8) continue;
 			can_tx_message_type tx_message_struct;
 			tx_message_struct.standard_id = packet.id;
