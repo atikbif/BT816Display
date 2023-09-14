@@ -124,6 +124,7 @@ static uint16_t udp_answer(uint8_t *rx, uint16_t rx_cnt) {
 						res = 9;
 						break;
 					case 0x04:
+						prog_mode_flag = 0;
 						init_state_menu();
 						current_menu = MENU_STATE;
 						udp_tx[8] = 0x01;

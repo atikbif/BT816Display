@@ -114,6 +114,5 @@ void lcd_task_function(void *pvParameters)
 
 		//demo_display_fonts();
 		vTaskDelay(100);
-		check_new_records_update(100);
 	}
 }

@@ -12,27 +12,110 @@
 #include "task.h"
 #include "config.h"
 #include "string.h"
+#include "crc.h"
+#include "cur_time.h"
+#include "flash.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define JD0               2451911
 
-static uint8_t arch_buf[ARCHIVE_PAGE_SIZE];
-
-static uint8_t archive_new_record_flag = 0;
+static uint8_t arch_buf[ARCHIVE_PAGE_SIZE] __attribute__((aligned(4)));
+static uint8_t rec[8] __attribute__((aligned(4)));
 
 static uint8_t ext_flash_used = 0;
-static uint8_t *first_rec_ptr = 0;
 static uint8_t *last_rec_ptr = 0;
+
+static uint16_t archive_page_num = 0;
+static uint16_t offset_in_page_ptr_page = 0;
+
+#define ACRHIVE_START_ADDR		0x08096000
+#define ARCHIVE_PAGE_CNT		32
 
 static const char test_flash_ok[] = "\xd0\xa2\xd0\xb5\xd1\x81\xd1\x82\x20\x46\x6c\x61\x73\x68\x20\x2d\x20\xd1\x83\xd1\x81\xd0\xbf\xd0\xb5\xd1\x88\xd0\xbd\xd0\xbe";
 static const char test_flash_err[] = "\xd0\xa2\xd0\xb5\xd1\x81\xd1\x82\x20\x46\x6c\x61\x73\x68\x20\xd0\xbe\xd1\x88\xd0\xb8\xd0\xb1\xd0\xba\xd0\xb0";
 static const char can_link_err[] = "\xd0\x9f\xd0\x9b\xd0\x9a\x20\x43\x41\x4e\x20\xd0\xbe\xd1\x88\xd0\xb8\xd0\xb1\xd0\xba\xd0\xb0";
 
-static void save_archive() {
+static uint8_t search_last_record(uint16_t *page_num) {
+	flash_read(ACRHIVE_START_ADDR , (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+	uint8_t *ptr = &arch_buf[0];
+	uint16_t check_flag = 0;
+	uint16_t found_flag = 0;
+	uint32_t rec_time = 0;
+	uint16_t pos = 0;
+	uint16_t max_time_pos = 0;
+	do {
+		check_flag = 0;
+		uint16_t crc = GetCRC16(ptr, 6);
+		if((((crc>>8)&0xFF)==ptr[6]) && ((crc&0xFF)==ptr[7])) {
+			check_flag = 1;
+			uint32_t page_time = ptr[0];
+			page_time = page_time << 8;
+			page_time |= ptr[1];
+			page_time = page_time << 8;
+			page_time |= ptr[2];
+			page_time = page_time << 8;
+			page_time |= ptr[3];
 
+			if(page_time>rec_time) {
+				uint16_t num = (((uint16_t)ptr[4])<<8) | ptr[5];
+				if(num<ARCHIVE_PAGE_CNT) {
+					*page_num = num;
+					found_flag = 1;
+					rec_time = page_time;
+					offset_in_page_ptr_page = pos + 8;
+				}
+
+
+
+			}
+			pos+=8;
+			if(pos>=ARCHIVE_PAGE_SIZE) break;
+			ptr+=8;
+		}
+	}while(check_flag);
+
+	return found_flag;
 }
 
-static void open_archive() {
+static void create_new_page_ptr(uint16_t page_num) {
+	if(offset_in_page_ptr_page>=ARCHIVE_PAGE_SIZE) {
+		offset_in_page_ptr_page = 0;
+//		flash_unlock();
+//		uint32_t offset_addr = ACRHIVE_START_ADDR - FLASH_BASE;
+//		uint32_t sector_position = offset_addr / SECTOR_SIZE;
+//		flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
+//		flash_lock();
+	}
+	uint32_t cur_time = time_to_uint32();
+	rec[0] = (cur_time>>24) & 0xFF;
+	rec[1] = (cur_time>>16) & 0xFF;
+	rec[2] = (cur_time>>8) & 0xFF;
+	rec[3] = cur_time & 0xFF;
+	rec[4] = page_num>>8; // page num
+	rec[5] = page_num & 0xFF;
+	uint16_t crc = GetCRC16((uint8_t*)rec, 6);
+	rec[6] = crc >> 8;
+	rec[7] = crc &0xFF;
+	flash_write(ACRHIVE_START_ADDR + offset_in_page_ptr_page, (uint16_t*)rec, 4);
+	offset_in_page_ptr_page+=8;
+}
 
+static void clear_archive_config_page() {
+//	flash_unlock();
+//	uint32_t offset_addr = ACRHIVE_START_ADDR - FLASH_BASE;
+//	uint32_t sector_position = offset_addr / SECTOR_SIZE;
+//	flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
+//	flash_lock();
+	create_new_page_ptr(0);
+}
+
+static void clear_archive_page(uint16_t page_num) {
+	flash_unlock();
+	uint32_t offset_addr = ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE - FLASH_BASE + (uint32_t)(page_num)*ARCHIVE_PAGE_SIZE;
+	uint32_t sector_position = offset_addr / SECTOR_SIZE;
+	flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
+	//flash_lock();
 }
 
 static uint8_t check_record(uint8_t *ptr) {
@@ -49,11 +132,45 @@ static uint8_t check_record(uint8_t *ptr) {
 	return res;
 }
 
+static void open_archive() {
+	uint16_t page_num = 0;
+	if(search_last_record(&page_num)) {
+		archive_page_num = page_num;
+		flash_read(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)page_num*ARCHIVE_PAGE_SIZE, (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+
+		uint16_t rec_cnt = 0;
+		uint8_t *ptr = &arch_buf[0];
+
+		while(check_record(ptr)) {
+			rec_cnt++;
+			if(rec_cnt>=MAX_ARCHIVE_RECORDS_CNT) break;
+			ptr+=ARCHIVE_RECORD_LENGTH;
+			if(ptr>&arch_buf[ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH]) break;
+		}
+
+		if(rec_cnt) {
+			last_rec_ptr = &arch_buf[(rec_cnt-1)*ARCHIVE_RECORD_LENGTH];
+		}else {
+			last_rec_ptr = 0;
+		}
+
+		if(rec_cnt<MAX_ARCHIVE_RECORDS_CNT) {
+			uint16_t prev_page_num = 0;
+			if(archive_page_num) prev_page_num = archive_page_num - 1;
+			else prev_page_num = ARCHIVE_PAGE_CNT - 1;
+			flash_read(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)prev_page_num*ARCHIVE_PAGE_SIZE + ARCHIVE_RECORD_LENGTH*rec_cnt, (uint16_t*)&arch_buf[ARCHIVE_RECORD_LENGTH*rec_cnt], (ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH*rec_cnt)/2);
+		}
+	}else {
+		clear_archive();
+	}
+}
+
 void init_archive() {
-	ext_flash_used = 0;
-	clear_archive();
+	ext_flash_used = 1;
 	if(ext_flash_used) {
 		open_archive();
+	}else {
+		clear_archive();
 	}
 }
 
@@ -66,7 +183,13 @@ void add_record_to_archive(struct message_record *rec) {
 	}else {
 		ptr=last_rec_ptr+ARCHIVE_RECORD_LENGTH;
 		if(ptr>=&arch_buf[ARCHIVE_PAGE_SIZE-1]) {
-			if(ext_flash_used) save_archive();
+			if(ext_flash_used) {
+				archive_page_num++;
+				if(archive_page_num>=ARCHIVE_PAGE_CNT) {
+					archive_page_num = 0;
+				}
+				create_new_page_ptr(archive_page_num);
+			}
 			ptr = &arch_buf[0];
 		}
 	}
@@ -95,11 +218,11 @@ void add_record_to_archive(struct message_record *rec) {
 	ptr[8] = crc >> 8; 	// crch place
 	ptr[9] = crc & 0xFF; 	// crcl place
 
+	flash_write(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)archive_page_num*ARCHIVE_PAGE_SIZE + (ptr-&arch_buf[0]), (uint16_t*)ptr, ARCHIVE_RECORD_LENGTH/2);
+
 	last_rec_ptr = ptr;
 
 	get_archive_records_cnt();
-
-	archive_new_record_flag = 1;
 }
 
 uint16_t get_archive_records_cnt() {
@@ -156,22 +279,16 @@ uint8_t get_record_with_offset_from_last(uint16_t offset, struct message_record 
 }
 
 void clear_archive() {
-	archive_new_record_flag = 0;
-	first_rec_ptr = 0;
 	last_rec_ptr = 0;
 	for(uint16_t i=0;i<ARCHIVE_PAGE_SIZE;i++) arch_buf[i] = 0;
-}
-
-void check_new_records_update(uint16_t step) {
-	static uint16_t archive_update_tmr = 0;
 	if(ext_flash_used) {
-		archive_update_tmr+=step;
-		if(archive_update_tmr>=ARCH_UPDATE_PERIOD) {
-			archive_update_tmr = 0;
-			if(archive_new_record_flag) {
-				 save_archive();
-				archive_new_record_flag = 0;
-			}
+		// clear archive in flash
+		archive_page_num = 0;
+		last_rec_ptr = 0;
+		offset_in_page_ptr_page = 0;
+		clear_archive_config_page();
+		for(uint16_t i=0;i<30;i++) {
+			clear_archive_page(i);
 		}
 	}
 }

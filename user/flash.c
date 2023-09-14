@@ -26,6 +26,8 @@
 
 #include "at32f435_437_board.h"
 #include "flash.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /** @addtogroup AT32F437_periph_examples
   * @{
@@ -120,6 +122,9 @@ error_status flash_write(uint32_t write_addr, uint16_t *p_buffer, uint16_t num_w
       status = flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
       if(status != FLASH_OPERATE_DONE)
         return ERROR;
+
+      flash_read(sector_position * SECTOR_SIZE + FLASH_BASE, flash_buf, SECTOR_SIZE / 2);
+
       for(i = 0; i < sector_remain; i++)
       {
         flash_buf[i + sector_offset] = p_buffer[i];
@@ -147,7 +152,7 @@ error_status flash_write(uint32_t write_addr, uint16_t *p_buffer, uint16_t num_w
         sector_remain = num_write;
     }
   }
-  flash_lock();
+  //flash_lock();
   return SUCCESS;
 }
 

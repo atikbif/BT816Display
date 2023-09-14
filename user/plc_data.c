@@ -103,6 +103,7 @@ void plc_data_calculate() {
 				break;
 		}
 		float corrected_data = source_data*calc[i].k + calc[i].b;
+		calc[i].fl_res = corrected_data;
 		switch(calc[i].prec) {
 			case PR0:
 				if(corrected_data<0) {

@@ -362,7 +362,17 @@ void mnemo_draw_text_var(const uint8_t *ptr) {
 				if(link_index<AI_CNT) value[0] = cl.pc21.ain[link_index].raw;
 				break;
 			case VAR_LINK_CALC:
-				if(link_index<MAX_CALC_CNT) value[0] = calc[link_index].result;
+				if(link_index<MAX_CALC_CNT) {
+					if(precision==PR0) {
+						value[0] = calc[link_index].result;
+					}else if(precision==PR1) {
+						value[0] = calc[link_index].fl_res*10;
+					}else if(precision==PR2) {
+						value[0] = calc[link_index].fl_res*100;
+					}else if(precision==PR3) {
+						value[0] = calc[link_index].fl_res*1000;
+					}
+				}
 				break;
 		}
 		uint32_t col = DL_COLOR_RGB;

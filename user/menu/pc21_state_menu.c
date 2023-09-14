@@ -29,27 +29,33 @@ static const uint8_t num_offset = 9;
 
 static void print_ai_value(uint16_t x, uint16_t y, uint8_t font, uint8_t num) {
 	int32_t val[2] = {0,0};
-	val[0] = calc[num].result;
-	switch(calc[num].prec) {
-		case PR0:
-			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d", 1, val);
-			break;
-		case PR1:
-			val[1] = val[0]%10;
-			val[0] = val[0]/10;
-			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%1d", 2, val);
-			break;
-		case PR2:
-			val[1] = val[0]%100;
-			val[0] = val[0]/100;
-			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%2d", 2, val);
-			break;
-		case PR3:
-			val[1] = val[0]%1000;
-			val[0] = val[0]/1000;
-			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%3d", 2, val);
-			break;
-	}
+	val[0] = calc[num].fl_res*1000;
+	val[1] = val[0]%1000;
+	val[0] = val[0]/1000;
+	bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%3d", 2, val);
+
+
+//	val[0] = calc[num].result;
+//	switch(calc[num].prec) {
+//		case PR0:
+//			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d", 1, val);
+//			break;
+//		case PR1:
+//			val[1] = val[0]%10;
+//			val[0] = val[0]/10;
+//			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%1d", 2, val);
+//			break;
+//		case PR2:
+//			val[1] = val[0]%100;
+//			val[0] = val[0]/100;
+//			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%2d", 2, val);
+//			break;
+//		case PR3:
+//			val[1] = val[0]%1000;
+//			val[0] = val[0]/1000;
+//			bt816_cmd_text_var(x, y, font, OPT_FORMAT, "%d.%3d", 2, val);
+//			break;
+//	}
 }
 
 void set_pc21_addr(uint8_t addr) {

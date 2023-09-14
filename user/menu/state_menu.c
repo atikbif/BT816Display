@@ -23,11 +23,15 @@
 
 #include "message_scaner.h"
 #include "prog_menu.h"
+#include "appl_info_menu.h"
 
 extern menu_list_t current_menu;
 extern ertc_time_type dev_time;
 extern uint8_t plc_can_link;
 extern uint8_t prog_mode_flag;
+
+extern cluster cl;
+extern appl_info_data_type appl_info_data;
 
 static uint8_t down_sign = 0;
 static uint8_t up_sign = 0;
@@ -39,6 +43,8 @@ static uint8_t message_text[MAX_MESSAGE_LENGTH];
 static uint8_t msg_cnt = 0;
 
 static uint16_t first_visible_message_num = 0;
+
+static uint16_t prev_key = 0;
 
 static uint8_t print_date(uint8_t *buf, time_info time) {
 	buf[0]=time.hour/10+'0';
@@ -128,7 +134,14 @@ void state_menu(uint16_t key) {
 	bt816_cmd_text(60, 35, 1, 0, message_text);
 
 	if(plc_can_link) {
-		bt816_cmd_text(300, 35, 1, 0, "\xd0\x92\x20\xd1\x81\xd0\xb5\xd1\x82\xd0\xb8");
+		if(cl.pc21.ethip_state==1) bt816_cmd_text(300, 35, 1, 0, "\xd0\xa1\xd0\x9a\xd0\x90\xd0\x94\xd0\x90\x20\xd0\xbf\xd0\xbe\xd0\xb4\xd0\xba\xd0\xbb\xd1\x8e\xd1\x87\xd0\xb5\xd0\xbd\xd0\xb0");
+		else {
+			bt816_cmd_dl(DL_COLOR_RGB | RED);
+			bt816_cmd_dl(DL_END);
+			bt816_cmd_text(300, 35, 1, 0, "\xd0\xa1\xd0\x9a\xd0\x90\xd0\x94\xd0\x90\x20\xd0\x9d\xd0\x95\xd0\xa2\x20\xd0\xa1\xd0\x92\xd0\xaf\xd0\x97\xd0\x98");
+			bt816_cmd_dl(DL_COLOR_RGB | BLUE);
+			bt816_cmd_dl(DL_END);
+		}
 	}else {
 		bt816_cmd_dl(DL_COLOR_RGB | RED);
 		bt816_cmd_dl(DL_END);
@@ -139,6 +152,8 @@ void state_menu(uint16_t key) {
 		bt816_cmd_dl(DL_COLOR_RGB | BLUE);
 		bt816_cmd_text(300, 35, 1, 0, "\xd0\x9d\xd0\xb5\x20\xd0\xb2\x20\xd1\x81\xd0\xb5\xd1\x82\xd0\xb8");
 	}
+
+	bt816_cmd_text(540, 35, 1, 0, appl_info_data.name);
 
 	uint16_t step = 30;
 
@@ -191,25 +206,28 @@ void state_menu(uint16_t key) {
 
 	bt816_cmd_dl(DL_DISPLAY);
 	bt816_cmd_dl(CMD_SWAP);
-
-	switch(key) {
-		case KEY_0:
-			prog_mode_flag = 1;
-			init_prog_menu();
-			current_menu = MENU_PROG;
-			break;
-		case KEY_RIGHT:
-		case KEY_ENTER:
-		case KEY_EXIT:
-			current_menu = MENU_MAIN;
-			break;
-		case KEY_UP:
-			if(first_visible_message_num>=SCREEN_MSG_CNT) first_visible_message_num-=SCREEN_MSG_CNT;
-			else first_visible_message_num = 0;
-			break;
-		case KEY_DOWN:
-			if(first_visible_message_num+SCREEN_MSG_CNT<msg_cnt) first_visible_message_num+=SCREEN_MSG_CNT;
-			break;
+	if(key!=prev_key) {
+		switch(key) {
+			case KEY_0:
+				prog_mode_flag = 1;
+				init_prog_menu();
+				current_menu = MENU_PROG;
+				break;
+			case KEY_RIGHT:
+			case KEY_ENTER:
+			case KEY_EXIT:
+				current_menu = MENU_MAIN;
+				break;
+			case KEY_UP:
+				if(first_visible_message_num>=SCREEN_MSG_CNT) first_visible_message_num-=SCREEN_MSG_CNT;
+				else first_visible_message_num = 0;
+				break;
+			case KEY_DOWN:
+				if(first_visible_message_num+SCREEN_MSG_CNT<msg_cnt) first_visible_message_num+=SCREEN_MSG_CNT;
+				break;
+		}
 	}
+
+	prev_key = key;
 }
 

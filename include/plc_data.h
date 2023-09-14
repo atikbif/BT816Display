@@ -37,6 +37,7 @@ typedef struct  {
 	enum CALC_LINK link;
 	uint16_t index;
 	int32_t result;
+	float fl_res;
 }calc_config;
 
 void init_plc_data();
