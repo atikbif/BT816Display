@@ -101,6 +101,7 @@ int main(void)
 
 	init_cur_time();
 
+
 	/* enter critical */
 	taskENTER_CRITICAL();
 

@@ -17,6 +17,7 @@
 #include "flash.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "zd25flash.h"
 
 #define JD0               2451911
 
@@ -25,6 +26,8 @@ static uint8_t rec[8] __attribute__((aligned(4)));
 
 static uint8_t ext_flash_used = 0;
 static uint8_t *last_rec_ptr = 0;
+
+static uint8_t zd25_flag = 0;
 
 static uint16_t archive_page_num = 0;
 static uint16_t offset_in_page_ptr_page = 0;
@@ -37,7 +40,12 @@ static const char test_flash_err[] = "\xd0\xa2\xd0\xb5\xd1\x81\xd1\x82\x20\x46\x
 static const char can_link_err[] = "\xd0\x9f\xd0\x9b\xd0\x9a\x20\x43\x41\x4e\x20\xd0\xbe\xd1\x88\xd0\xb8\xd0\xb1\xd0\xba\xd0\xb0";
 
 static uint8_t search_last_record(uint16_t *page_num) {
-	flash_read(ACRHIVE_START_ADDR , (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+	if(zd25_flag) {
+		zd25_flash_read(ZD25_ACRHIVE_START_ADDR , (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+	}else {
+		flash_read(ACRHIVE_START_ADDR , (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+	}
+
 	uint8_t *ptr = &arch_buf[0];
 	uint16_t check_flag = 0;
 	uint16_t found_flag = 0;
@@ -59,7 +67,7 @@ static uint8_t search_last_record(uint16_t *page_num) {
 
 			if(page_time>rec_time) {
 				uint16_t num = (((uint16_t)ptr[4])<<8) | ptr[5];
-				if(num<ARCHIVE_PAGE_CNT) {
+				if(((zd25_flag==0) && (num<ARCHIVE_PAGE_CNT)) || ((zd25_flag) && (num<ZD25_ARCHIVE_PAGE_CNT))) {
 					*page_num = num;
 					found_flag = 1;
 					rec_time = page_time;
@@ -81,11 +89,6 @@ static uint8_t search_last_record(uint16_t *page_num) {
 static void create_new_page_ptr(uint16_t page_num) {
 	if(offset_in_page_ptr_page>=ARCHIVE_PAGE_SIZE) {
 		offset_in_page_ptr_page = 0;
-//		flash_unlock();
-//		uint32_t offset_addr = ACRHIVE_START_ADDR - FLASH_BASE;
-//		uint32_t sector_position = offset_addr / SECTOR_SIZE;
-//		flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
-//		flash_lock();
 	}
 	uint32_t cur_time = time_to_uint32();
 	rec[0] = (cur_time>>24) & 0xFF;
@@ -97,25 +100,31 @@ static void create_new_page_ptr(uint16_t page_num) {
 	uint16_t crc = GetCRC16((uint8_t*)rec, 6);
 	rec[6] = crc >> 8;
 	rec[7] = crc &0xFF;
-	flash_write(ACRHIVE_START_ADDR + offset_in_page_ptr_page, (uint16_t*)rec, 4);
+	if(zd25_flag) {
+		zd25_flash_write(ZD25_ACRHIVE_START_ADDR + offset_in_page_ptr_page, (uint16_t*)rec, 4);
+	}else {
+		flash_write(ACRHIVE_START_ADDR + offset_in_page_ptr_page, (uint16_t*)rec, 4);
+	}
 	offset_in_page_ptr_page+=8;
 }
 
 static void clear_archive_config_page() {
-//	flash_unlock();
-//	uint32_t offset_addr = ACRHIVE_START_ADDR - FLASH_BASE;
-//	uint32_t sector_position = offset_addr / SECTOR_SIZE;
-//	flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
-//	flash_lock();
 	create_new_page_ptr(0);
 }
 
 static void clear_archive_page(uint16_t page_num) {
-	flash_unlock();
-	uint32_t offset_addr = ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE - FLASH_BASE + (uint32_t)(page_num)*ARCHIVE_PAGE_SIZE;
-	uint32_t sector_position = offset_addr / SECTOR_SIZE;
-	flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
-	//flash_lock();
+	if(zd25_flag) {
+		uint32_t offset_addr = ZD25_ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)(page_num)*ARCHIVE_PAGE_SIZE;
+		uint32_t sector_position = offset_addr / ZD25_SECTOR_SIZE;
+		zd25_write_enable();
+		zd25_sector_erase(sector_position * ZD25_SECTOR_SIZE);
+	}else {
+		flash_unlock();
+		uint32_t offset_addr = ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE - FLASH_BASE + (uint32_t)(page_num)*ARCHIVE_PAGE_SIZE;
+		uint32_t sector_position = offset_addr / SECTOR_SIZE;
+		flash_sector_erase(sector_position * SECTOR_SIZE + FLASH_BASE);
+		//flash_lock();
+	}
 }
 
 static uint8_t check_record(uint8_t *ptr) {
@@ -136,7 +145,12 @@ static void open_archive() {
 	uint16_t page_num = 0;
 	if(search_last_record(&page_num)) {
 		archive_page_num = page_num;
-		flash_read(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)page_num*ARCHIVE_PAGE_SIZE, (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+		if(zd25_flag) {
+			zd25_flash_read(ZD25_ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)page_num*ARCHIVE_PAGE_SIZE, (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+		}else {
+			flash_read(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)page_num*ARCHIVE_PAGE_SIZE, (uint16_t*)arch_buf, ARCHIVE_PAGE_SIZE/2);
+		}
+
 
 		uint16_t rec_cnt = 0;
 		uint8_t *ptr = &arch_buf[0];
@@ -156,9 +170,16 @@ static void open_archive() {
 
 		if(rec_cnt<MAX_ARCHIVE_RECORDS_CNT) {
 			uint16_t prev_page_num = 0;
-			if(archive_page_num) prev_page_num = archive_page_num - 1;
-			else prev_page_num = ARCHIVE_PAGE_CNT - 1;
-			flash_read(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)prev_page_num*ARCHIVE_PAGE_SIZE + ARCHIVE_RECORD_LENGTH*rec_cnt, (uint16_t*)&arch_buf[ARCHIVE_RECORD_LENGTH*rec_cnt], (ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH*rec_cnt)/2);
+			if(zd25_flag) {
+				if(archive_page_num) prev_page_num = archive_page_num - 1;
+				else prev_page_num = ZD25_ARCHIVE_PAGE_CNT - 1;
+				zd25_flash_read(ZD25_ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)prev_page_num*ARCHIVE_PAGE_SIZE + ARCHIVE_RECORD_LENGTH*rec_cnt, (uint16_t*)&arch_buf[ARCHIVE_RECORD_LENGTH*rec_cnt], (ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH*rec_cnt)/2);
+			}else {
+				if(archive_page_num) prev_page_num = archive_page_num - 1;
+				else prev_page_num = ARCHIVE_PAGE_CNT - 1;
+				flash_read(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)prev_page_num*ARCHIVE_PAGE_SIZE + ARCHIVE_RECORD_LENGTH*rec_cnt, (uint16_t*)&arch_buf[ARCHIVE_RECORD_LENGTH*rec_cnt], (ARCHIVE_PAGE_SIZE-ARCHIVE_RECORD_LENGTH*rec_cnt)/2);
+			}
+
 		}
 	}else {
 		clear_archive();
@@ -167,7 +188,9 @@ static void open_archive() {
 
 void init_archive() {
 	ext_flash_used = 1;
+	zd25_flag = 1;
 	if(ext_flash_used) {
+		if(zd25_flag) zd25_init();
 		open_archive();
 	}else {
 		clear_archive();
@@ -185,9 +208,16 @@ void add_record_to_archive(struct message_record *rec) {
 		if(ptr>=&arch_buf[ARCHIVE_PAGE_SIZE-1]) {
 			if(ext_flash_used) {
 				archive_page_num++;
-				if(archive_page_num>=ARCHIVE_PAGE_CNT) {
-					archive_page_num = 0;
+				if(zd25_flag) {
+					if(archive_page_num>=ZD25_ARCHIVE_PAGE_CNT) {
+						archive_page_num = 0;
+					}
+				}else {
+					if(archive_page_num>=ARCHIVE_PAGE_CNT) {
+						archive_page_num = 0;
+					}
 				}
+
 				create_new_page_ptr(archive_page_num);
 			}
 			ptr = &arch_buf[0];
@@ -218,7 +248,11 @@ void add_record_to_archive(struct message_record *rec) {
 	ptr[8] = crc >> 8; 	// crch place
 	ptr[9] = crc & 0xFF; 	// crcl place
 
-	flash_write(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)archive_page_num*ARCHIVE_PAGE_SIZE + (ptr-&arch_buf[0]), (uint16_t*)ptr, ARCHIVE_RECORD_LENGTH/2);
+	if(zd25_flag) {
+		zd25_flash_write(ZD25_ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)archive_page_num*ARCHIVE_PAGE_SIZE + (ptr-&arch_buf[0]), (uint16_t*)ptr, ARCHIVE_RECORD_LENGTH/2);
+	}else {
+		flash_write(ACRHIVE_START_ADDR + ARCHIVE_PAGE_SIZE + (uint32_t)archive_page_num*ARCHIVE_PAGE_SIZE + (ptr-&arch_buf[0]), (uint16_t*)ptr, ARCHIVE_RECORD_LENGTH/2);
+	}
 
 	last_rec_ptr = ptr;
 
