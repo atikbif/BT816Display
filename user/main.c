@@ -43,6 +43,9 @@
 #include "cluster_state_menu.h"
 #include "can_task.h"
 #include "message_archive.h"
+#include "at45db081e.h"
+#include "fatfs.h"
+#include "bt816_cmd.h"
 
 /** @addtogroup UTILITIES_examples
   * @{
@@ -61,6 +64,8 @@ extern cluster cl;
 
 extern uint32_t cur_long_time;
 extern cluster_info_data_type cluster_data;
+
+extern volatile uint8_t fl_buf[4096];
 
 extern void tcpip_stack_init(void);
 extern void udpecho_init(void);
@@ -87,6 +92,72 @@ int main(void)
 
 	system_clock_config();
 	at32_board_init();
+	delay_init();
+
+	init_backlight();
+	delay_ms(500);
+	bt816_spi_init();
+	init_plc_data();
+
+	can1_init();
+	init_cluster(&cl);
+	init_trends();
+
+	uint8_t try = 0;
+	while(try<5) {
+		if(bt816_init()) break;
+		delay_ms(100);
+		try++;
+	}
+	delay_ms(100);
+
+	MX_FATFS_Init();
+	at45_init();
+	FATFS fileSystem;
+	FIL rdFile;
+	UINT rdBytes;
+	uint8_t nand_res = 0;
+	delay_ms(100);
+
+	if(f_mount(&fileSystem, "0", 1) == FR_OK)
+	{
+		uint8_t path[] = "prog.bin";
+		FILINFO fInfo;
+		nand_res = 0;
+		if(f_stat((const char*)path, &fInfo) == FR_OK) {
+			FRESULT res = f_open(&rdFile, (char*)path, FA_READ);
+			if(res==FR_OK) {
+				if(fInfo.fsize>=100) {
+					 // стирание секторов
+
+					uint32_t wr_cnt = 0;
+					while(wr_cnt<fInfo.fsize) {
+						uint32_t remain_cnt = fInfo.fsize-wr_cnt;
+						if(remain_cnt>=4096) {
+							res = f_lseek(&rdFile, wr_cnt);
+							if(res==FR_OK) {
+								res = f_read(&rdFile, (void*)fl_buf, 4096, &rdBytes);
+								if(res==FR_OK && rdBytes==4096) {
+									// запись flash
+									wr_cnt+=4096;
+								}else break;
+							}else break;
+						}else {
+							res = f_lseek(&rdFile, wr_cnt);
+							if(res==FR_OK) {
+								res = f_read(&rdFile, (void*)fl_buf, remain_cnt, &rdBytes);
+								if(res==FR_OK && rdBytes==remain_cnt) {
+									while((remain_cnt%4)!=0) remain_cnt++;
+									wr_cnt+=remain_cnt;
+								}else break;
+							}else break;
+						}
+					}
+				}
+
+			}
+		}
+	}
 
 	at32_led_init(LED_POW);
 	at32_led_init(LED_ERR);
@@ -100,7 +171,6 @@ int main(void)
 	rs485_2_send_data("Start\r\n",7);
 
 	init_cur_time();
-
 
 	/* enter critical */
 	taskENTER_CRITICAL();

@@ -1601,16 +1601,16 @@ uint8_t bt816_init() {
 	uint8_t chip_id = 0;
 	uint16_t cpu_reset = 0;
 	uint16_t timeout = 0;
-	vTaskDelay(50); /* minimum time for power-down is 5ms */
+	delay_ms(50); /* minimum time for power-down is 5ms */
 	bt816_power_down_off();
-	vTaskDelay(100);
-	vTaskDelay(21);
+	delay_ms(100);
+	delay_ms(21);
 	bt816_cmd_send(0x44,0x00); // clk ext
 	bt816_cmd_send(0x61,0x46); // set clock to 72 MHz
 	bt816_cmd_send(0x00,0x00); // start
-	vTaskDelay(300);
+	delay_ms(300);
 	do{
-		vTaskDelay(1);
+		delay_ms(1);
 		chip_id = bt816_mem_read8(REG_ID);
 		timeout++;
 		if(timeout > 400)
@@ -1620,7 +1620,7 @@ uint8_t bt816_init() {
 	}while(chip_id != 0x7C);
 	timeout = 0;
 	do{
-		vTaskDelay(1);
+		delay_ms(1);
 		cpu_reset = bt816_mem_read16(REG_CPURESET);
 		timeout++;
 		if(timeout > 500)
@@ -1632,15 +1632,15 @@ uint8_t bt816_init() {
 	bt816_mem_write8(REG_PWM_DUTY, 0);
 
 	uint32_t dev_id = bt816_mem_read32(0x0c0000);
-	vTaskDelay(200);
+	delay_ms(200);
 	if(dev_id==BT816_ID) {
 		bt816_mem_write32(REG_CMDB_WRITE,CMD_FLASHATTACH);
-		vTaskDelay(200);
+		delay_ms(200);
 		uint8_t flash_status = bt816_mem_read8(0x3025F0);
 		if(flash_status==2)	{
 
 			bt816_cmd_flashread(0, 0, 4096);
-			vTaskDelay(100);
+			delay_ms(100);
 			uint8_t blob_check = 1;
 			for(uint16_t i=0;i<4096;i++) {
 				uint8_t val = bt816_mem_read8(i);
@@ -1651,15 +1651,15 @@ uint8_t bt816_init() {
 			}
 			if(blob_check==0) {
 				bt816_cmd_memwrite(0,4096,(uint8_t*)unified_blob);
-				vTaskDelay(100);
+				delay_ms(100);
 				bt816_cmd_flashupdate(0,0,4096);
-				vTaskDelay(1000);
+				delay_ms(1000);
 			}else {
 
 			}
 
 			uint32_t fast_state = bt816_cmd_flashfast();
-			vTaskDelay(100);
+			delay_ms(100);
 			flash_status = bt816_mem_read8(0x3025F0);
 			if(flash_status==3) {
 
@@ -1694,10 +1694,10 @@ uint8_t bt816_init() {
 				bt816_mem_write8(REG_PCLK, 2);
 
 	//			v = bt816_mem_read32(REG_FRAMES);
-	//			vTaskDelay(100);
+	//			delay_ms(100);
 	//			v = bt816_mem_read32(REG_FRAMES);
 	//			if(v==0) return 0;
-	//			vTaskDelay(100);
+	//			delay_ms(100);
 	//			v = bt816_mem_read32(REG_FRAMES);
 	//			if(v==0) return 0;
 

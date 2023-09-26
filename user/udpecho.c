@@ -33,7 +33,7 @@ extern uint16_t rst_tmr;
 
 extern menu_list_t current_menu;
 
-static volatile uint8_t fl_buf[BLOCK_SIZE];
+__attribute__((aligned(4))) volatile uint8_t fl_buf[BLOCK_SIZE];
 
 
 

@@ -14,7 +14,7 @@ uint8_t at45_error = 0;
 uint8_t at45_get_info(struct at_info *info) {
 	uint8_t cmd = 0x9F;
 	chip_select(AT45);
-	delay_ms(1);
+	delay_ms(100);
 	if(write_data(&cmd, 1, 50)) {
 		if(read_data((uint8_t*)info, sizeof(info), 50)) {
 			chip_deselect(AT45);

@@ -41,21 +41,6 @@ void lcd_task_function(void *pvParameters)
 	uint16_t tmr = 0;
 	uint8_t mnemo_num = 0;
 
-	init_backlight();
-	vTaskDelay(500);
-	bt816_spi_init();
-	init_plc_data();
-
-	can1_init();
-	init_cluster(&cl);
-	init_trends();
-
-	uint8_t try = 0;
-	while(try<5) {
-		if(bt816_init()) break;
-		vTaskDelay(100);
-		try++;
-	}
 	init_archive();
 	init_display_fonts();
 	init_mnemo();
