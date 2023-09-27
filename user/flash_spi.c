@@ -66,6 +66,12 @@ void flash_spi_init() {
 	gpio_init_struct.gpio_pull = GPIO_PULL_NONE;
 	gpio_init(GPIOD, &gpio_init_struct);
 
+	gpio_init_struct.gpio_drive_strength = GPIO_DRIVE_STRENGTH_STRONGER;
+	gpio_init_struct.gpio_mode = GPIO_MODE_INPUT;
+	gpio_init_struct.gpio_pins = GPIO_PINS_1;
+	gpio_init_struct.gpio_pull = GPIO_PULL_UP;
+	gpio_init(GPIOD, &gpio_init_struct);
+
 	gpio_bits_set(GPIOD, GPIO_PINS_2);
 
 	crm_periph_clock_enable(CRM_GPIOB_PERIPH_CLOCK, TRUE);

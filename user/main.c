@@ -109,59 +109,98 @@ int main(void)
 		delay_ms(100);
 		try++;
 	}
-	delay_ms(100);
 
-	MX_FATFS_Init();
-	at45_init();
-	FATFS fileSystem;
-	FIL rdFile;
-	UINT rdBytes;
-	uint8_t nand_res = 0;
-	delay_ms(100);
-
-	if(f_mount(&fileSystem, "0", 1) == FR_OK)
-	{
-		uint8_t path[] = "prog.bin";
-		FILINFO fInfo;
-		nand_res = 0;
-		if(f_stat((const char*)path, &fInfo) == FR_OK) {
-			FRESULT res = f_open(&rdFile, (char*)path, FA_READ);
-			if(res==FR_OK) {
-				if(fInfo.fsize>=100) {
-					 // стирание секторов
-
-					uint32_t wr_cnt = 0;
-					while(wr_cnt<fInfo.fsize) {
-						uint32_t remain_cnt = fInfo.fsize-wr_cnt;
-						if(remain_cnt>=4096) {
-							res = f_lseek(&rdFile, wr_cnt);
-							if(res==FR_OK) {
-								res = f_read(&rdFile, (void*)fl_buf, 4096, &rdBytes);
-								if(res==FR_OK && rdBytes==4096) {
-									// запись flash
-									wr_cnt+=4096;
-								}else break;
-							}else break;
-						}else {
-							res = f_lseek(&rdFile, wr_cnt);
-							if(res==FR_OK) {
-								res = f_read(&rdFile, (void*)fl_buf, remain_cnt, &rdBytes);
-								if(res==FR_OK && rdBytes==remain_cnt) {
-									while((remain_cnt%4)!=0) remain_cnt++;
-									wr_cnt+=remain_cnt;
-								}else break;
-							}else break;
-						}
-					}
-				}
-
-			}
-		}
-	}
 
 	at32_led_init(LED_POW);
 	at32_led_init(LED_ERR);
 
+	if(gpio_input_data_bit_read(GPIOD, GPIO_PINS_1)==RESET) {
+		delay_ms(500);
+		MX_FATFS_Init();
+		at45_init();
+		FATFS fileSystem;
+		FIL rdFile;
+		UINT rdBytes;
+		uint8_t nand_res = 0;
+		delay_ms(100);
+
+		uint8_t file_found_flag = 0;
+		uint32_t led_cnt = 0;
+
+		if(f_mount(&fileSystem, "0", 1) == FR_OK)
+		{
+			uint8_t path[] = "lcdconf.bin";
+			FILINFO fInfo;
+			nand_res = 0;
+			if(f_stat((const char*)path, &fInfo) == FR_OK) {
+				FRESULT res = f_open(&rdFile, (char*)path, FA_READ);
+				if(res==FR_OK) {
+					if(fInfo.fsize) {
+						file_found_flag = 1;
+						uint32_t wr_cnt = 0;
+						while(wr_cnt<fInfo.fsize) {
+							uint32_t remain_cnt = fInfo.fsize-wr_cnt;
+							if(remain_cnt>=4096) {
+								res = f_lseek(&rdFile, wr_cnt);
+								if(res==FR_OK) {
+									res = f_read(&rdFile, (void*)fl_buf, 4096, &rdBytes);
+									if(res==FR_OK && rdBytes==4096) {
+										// запись flash
+										bt816_cmd_memwrite(0,4096,(uint8_t*)fl_buf);
+										delay_ms(10);
+										bt816_cmd_flashupdate(4096+wr_cnt,0,4096);
+										delay_ms(100);
+										wr_cnt+=4096;
+										led_cnt++;
+										if(led_cnt>=1) {
+											led_cnt = 0;
+											at32_led_toggle(LED_POW);
+											at32_led_toggle(LED_ERR);
+										}
+									}else break;
+								}else break;
+							}else {
+								res = f_lseek(&rdFile, wr_cnt);
+								if(res==FR_OK) {
+									res = f_read(&rdFile, (void*)fl_buf, remain_cnt, &rdBytes);
+									if(res==FR_OK && rdBytes==remain_cnt) {
+										uint32_t i = 0;
+										while((remain_cnt+i)<4096) {
+											fl_buf[remain_cnt+i] = 0;
+											i++;
+										}
+										// запись flash
+										bt816_cmd_memwrite(0,4096,(uint8_t*)fl_buf);
+										delay_ms(10);
+										bt816_cmd_flashupdate(4096+wr_cnt,0,4096);
+										delay_ms(100);
+										led_cnt++;
+										if(led_cnt>=1) {
+											led_cnt = 0;
+											at32_led_toggle(LED_POW);
+											at32_led_toggle(LED_ERR);
+										}
+										wr_cnt+=remain_cnt;
+									}else break;
+								}else break;
+							}
+						}
+					}
+				}
+			}
+		}
+		if(file_found_flag==0) {
+			for(uint8_t i=0;i<6;i++) {
+				at32_led_toggle(LED_ERR);
+				delay_ms(500);
+			}
+		}
+
+		delay_ms(500);
+	}
+
+	at32_led_on(LED_POW);
+	at32_led_on(LED_ERR);
 
 	/* init usart1 */
 	uart1_init(115200);
