@@ -197,7 +197,11 @@ error_status emac_layer2_configuration(void)
 
 	emac_control_para_init(&mac_control_para);
 
-	mac_control_para.auto_nego = EMAC_AUTO_NEGOTIATION_ON;
+	//mac_control_para.auto_nego = EMAC_AUTO_NEGOTIATION_ON;
+
+	mac_control_para.auto_nego = EMAC_AUTO_NEGOTIATION_OFF;
+	mac_control_para.duplex_mode = EMAC_HALF_DUPLEX;
+	mac_control_para.fast_ethernet_speed = EMAC_SPEED_10MBPS;
 
 	if(emac_phy_init(&mac_control_para) == ERROR)
 	{
